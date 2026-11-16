@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Each case of tests/template/cases rendered and checked as its own CI would check it: the
-  # scripts of node-ci.yml, set up by the setup action, then the browser tests and actionlint
-  # on the rendered workflows.
+  # Each case of tests/template/cases rendered and checked as its own CI would check it: actionlint
+  # and the calls of the reusable workflows on its workflows, the scripts of node-ci.yml, set up by
+  # the setup action, then the browser tests.
   render:
     name: render (${{ matrix.case }})
     runs-on: ubuntu-latest
@@ -59,6 +59,11 @@ jobs:
           docker run --rm --volume "$PWD/$PROJECT:/repo" --workdir /repo
           rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
           -color
+      # Against this checkout's reusable workflows, which actionlint cannot read at @v1. Copier's
+      # Python, first on PATH, has PyYAML.
+      - name: Check the calls of the reusable workflows
+        if: env.TYPESCRIPT == 'true'
+        run: python tests/template/check-callers.py "$PROJECT"
       # A rendered project has no pnpm-lock.yaml until its first install
       - if: env.TYPESCRIPT == 'true'
         uses: ./.github/actions/setup

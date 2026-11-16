@@ -116,6 +116,10 @@ It takes no `_tasks`, `_migrations` or Jinja extensions: hosted Renovate runs `c
 The Template workflow renders each case in [`tests/template/cases`](tests/template/cases) and checks
 it as its own CI would: actionlint on its workflows, then, set up by the setup action, `format:check`,
 `lint` (failing when it changed a file), `type-check`, `test` and `build`, and the browser tests.
+actionlint cannot read a workflow called at `@v1`, so
+[`tests/template/check-callers.py`](tests/template/check-callers.py) checks each call against the
+workflows of the checkout: the inputs it passes, the permissions it grants, and the CI workflow the
+release starts on the Version Packages pull request.
 [`tests/template/update.sh`](tests/template/update.sh) checks `copier update` with the oldest Copier
 `copier.yml` allows and the current one. To try a case locally:
 
