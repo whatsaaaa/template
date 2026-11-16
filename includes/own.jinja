@@ -1,0 +1,37 @@
+{#- The scripts and dependencies of the project's own package: the root package.json of a single
+    package, packages/<name>/package.json in a workspace. Imported with context. #}
+{%- set library = kind == 'library' -%}
+{%- set scripts = [] -%}
+{%- set dependencies = [] -%}
+{%- set dev = ['@types/node', '@whatsaaaa/tsconfig', 'typescript'] -%}
+{%- set peer = [] -%}
+
+{%- if library %}
+  {#- `prepare` builds dist/ on install, so the workspace can use it, and when the package is packed #}
+  {%- set scripts = scripts + [['build', 'tsc -p tsconfig.build.json'], ['prepare', 'pnpm build']] %}
+  {%- if framework == 'vue' %}{% set dev = dev + ['vue'] %}{% set peer = peer + ['vue'] %}{% endif %}
+  {%- if framework == 'react' %}
+    {%- set dev = dev + ['react', '@types/react'] %}{% set peer = peer + ['react'] %}
+  {%- endif %}
+{%- elif framework == 'astro' %}
+  {%- set scripts = scripts + [['dev', 'astro dev'], ['build', 'astro build'],
+    ['preview', 'astro preview']] %}
+  {%- set dependencies = dependencies + ['astro'] %}
+  {%- set dev = dev + ['@astrojs/check'] %}
+{%- else %}
+  {%- set scripts = scripts + [['dev', 'vite'], ['build', 'vite build'], ['preview', 'vite preview']] %}
+  {%- set dev = dev + ['vite'] %}
+  {%- if framework == 'vue' %}
+    {%- set dependencies = dependencies + ['vue'] %}{% set dev = dev + ['@vitejs/plugin-vue'] %}
+  {%- endif %}
+  {%- if framework == 'react' %}
+    {%- set dependencies = dependencies + ['react', 'react-dom'] %}
+    {%- set dev = dev + ['@vitejs/plugin-react', '@types/react', '@types/react-dom'] %}
+  {%- endif %}
+{%- endif -%}
+
+{%- if framework == 'vue' %}{% set dev = dev + ['vue-tsc'] %}{% endif -%}
+{%- if design_system %}{% set dependencies = dependencies + ['@whatsaaaa/design-system'] %}{% endif -%}
+
+{%- set type_check = 'vue-tsc' if framework == 'vue' else 'astro check' if framework == 'astro' else 'tsc' -%}
+{%- set lint_package = 'publint --strict && pnpm pack --out .attw/package.tgz && attw .attw/package.tgz --profile esm-only' -%}

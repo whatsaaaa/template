@@ -1,0 +1,11 @@
+{%- from 'includes/json.jinja' import deps, pairs with context -%}
+{
+  "name": "docs",
+  "private": true,
+  "description": "The docs of {{ package_name }}, deployed to GitHub Pages",
+  "type": "module",
+  "scripts": {{ pairs([['dev', 'vite'], ['build', 'vite build'], ['preview', 'vite preview'],
+    ['type-check', 'tsc']]) }},
+  "dependencies": {{ deps(['@whatsaaaa/design-system'] if design_system else [], local=[package_name]) }},
+  "devDependencies": {{ deps(['@types/node', '@whatsaaaa/tsconfig', 'typescript', 'vite']) }}
+}

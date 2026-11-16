@@ -1,0 +1,121 @@
+name: Template
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: template-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Each case of tests/template/cases rendered and checked as its own CI would check it: the
+  # scripts of node-ci.yml, set up by the setup action, then the browser tests and actionlint
+  # on the rendered workflows.
+  render:
+    name: render (${{ matrix.case }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        case:
+          - library-single
+          - library-monorepo
+          - vue-app
+          - astro-site
+          - react-app-monorepo
+          - plain-site
+          - react-library
+          - base
+    env:
+      CASE: ${{ matrix.case }}
+      PROJECT: rendered/${{ matrix.case }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Copier
+        run: |
+          python3 -m venv "$RUNNER_TEMP/copier"
+          "$RUNNER_TEMP/copier/bin/pip" install --quiet -r tests/template/requirements.txt
+          echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
+      - name: Render
+        run: |
+          tests/template/render.sh "$CASE" "$PROJECT"
+          # A repository of its own, so the lint guard below sees what lint changes
+          git -C "$PROJECT" init --quiet
+          git -C "$PROJECT" add -A
+          git -C "$PROJECT" -c user.name=ci -c user.email=ci@example.com commit --quiet -m render
+          if [ -f "$PROJECT/package.json" ]; then echo "TYPESCRIPT=true" >>"$GITHUB_ENV"; fi
+          if [ -f "$PROJECT/playwright.config.ts" ]; then echo "BROWSER=true" >>"$GITHUB_ENV"; fi
+      - name: Check the rendered workflows
+        if: env.TYPESCRIPT == 'true'
+        run: >-
+          docker run --rm --volume "$PWD/$PROJECT:/repo" --workdir /repo
+          rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -color
+      # A rendered project has no pnpm-lock.yaml until its first install
+      - if: env.TYPESCRIPT == 'true'
+        uses: ./.github/actions/setup
+        with:
+          working-directory: ${{ env.PROJECT }}
+          frozen-lockfile: false
+          cache: false
+      - name: Run the scripts of node-ci.yml
+        if: env.TYPESCRIPT == 'true'
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          # pnpm install writes into pnpm-workspace.yaml what it had to let in, such as a package
+          # younger than its minimum release age: a rendered project must install as it is
+          git diff --exit-code || {
+            echo "::error::pnpm install changed the rendered files above"
+            exit 1
+          }
+          for script in format:check lint type-check test build; do
+            echo "::group::pnpm $script"
+            pnpm run "$script"
+            echo "::endgroup::"
+            if [ "$script" = lint ]; then
+              git diff --exit-code || {
+                echo "::error::lint changed the rendered files above"
+                exit 1
+              }
+            fi
+          done
+      - name: Run the browser tests
+        if: env.BROWSER == 'true'
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm run test:browser
+
+  update:
+    name: update (copier ${{ matrix.copier }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest Copier copier.yml allows, and the one the render jobs use
+        copier: [min, current]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Copier
+        env:
+          COPIER: ${{ matrix.copier }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/copier"
+          if [ "$COPIER" = min ]; then
+            "$RUNNER_TEMP/copier/bin/pip" install --quiet "copier==$(sed -n "s/^_min_copier_version: '\(.*\)'$/\1/p" copier.yml)"
+          else
+            "$RUNNER_TEMP/copier/bin/pip" install --quiet -r tests/template/requirements.txt
+          fi
+          echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
+      - run: tests/template/update.sh

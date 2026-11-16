@@ -1,0 +1,8 @@
+# A site without a framework, the design system or browser tests, deployed to the user site
+name: whatsaaaa.github.io
+description: A demo site without a framework
+visibility: public
+kind: site
+framework: none
+design_system: false
+browser_tests: false

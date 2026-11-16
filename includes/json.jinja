@@ -1,0 +1,21 @@
+{#- Macros for the package.json files, imported with context. #}
+
+{#- A JSON object of packages and the versions in the template's package.json, sorted by name;
+    `local` adds packages of the workspace, as workspace:* #}
+{%- macro deps(names, local=[]) -%}
+{
+{%- set all = (names + local) | unique | sort %}
+{%- for name in all %}
+    {{ name | to_json }}: {{ ('workspace:*' if name in local else versions[name]) | to_json }}{{ ',' if not loop.last }}
+{%- endfor %}
+  }
+{%- endmacro %}
+
+{#- A JSON object of [key, value] pairs, in their order #}
+{%- macro pairs(items) -%}
+{
+{%- for item in items %}
+    {{ item[0] | to_json }}: {{ item[1] | to_json(ensure_ascii=False) }}{{ ',' if not loop.last }}
+{%- endfor %}
+  }
+{%- endmacro %}

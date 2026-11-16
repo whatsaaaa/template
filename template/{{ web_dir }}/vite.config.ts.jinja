@@ -1,0 +1,23 @@
+import { defineConfig } from 'vite'
+{%- if ui == 'vue' %}
+import vue from '@vitejs/plugin-vue'
+{%- elif ui == 'react' %}
+import react from '@vitejs/plugin-react'
+{%- endif %}
+{%- if base_path == '/' and ui not in ['vue', 'react'] %}
+
+export default defineConfig({})
+{%- else %}
+
+export default defineConfig({
+{%- if base_path != '/' %}
+  // GitHub Pages serves the {{ 'docs' if kind == 'library' else kind }} from {{ pages_url }}
+  base: '{{ base_path }}',
+{%- endif %}
+{%- if ui == 'vue' %}
+  plugins: [vue()],
+{%- elif ui == 'react' %}
+  plugins: [react()],
+{%- endif %}
+})
+{%- endif %}

@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./node_modules/@whatsaaaa/oxlint-config/{{ 'vue' if framework == 'vue' else 'react' if framework == 'react' else 'base' }}.json"],
+  "ignorePatterns": ["**/dist"{% if framework == 'astro' %}, "**/.astro"{% endif %}]
+}

@@ -1,0 +1,4 @@
+# A private Vue app on the design system, tested in a browser: the answers' defaults for an app
+name: demo-vue-app
+description: A demo Vue app on the design system
+kind: app

@@ -1,0 +1,14 @@
+{#- A Markdown table of [cell, cell] rows under a header row, its columns padded to one width as
+    the formatter writes them #}
+{%- macro table(header, rows) -%}
+{%- set width = namespace(a=header[0] | length, b=header[1] | length) -%}
+{%- for row in rows -%}
+  {%- set width.a = [width.a, row[0] | length] | max -%}
+  {%- set width.b = [width.b, row[1] | length] | max -%}
+{%- endfor -%}
+| {{ header[0].ljust(width.a) }} | {{ header[1].ljust(width.b) }} |
+| {{ '-' * width.a }} | {{ '-' * width.b }} |
+{%- for row in rows %}
+| {{ row[0].ljust(width.a) }} | {{ row[1].ljust(width.b) }} |
+{%- endfor %}
+{%- endmacro %}

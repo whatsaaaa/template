@@ -1,0 +1,8 @@
+# A private React library that is not published, without AGENTS.md or a license
+name: demo-react-library
+description: A demo React library
+kind: library
+workspace: single
+framework: react
+license: none
+agents_md: false

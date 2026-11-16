@@ -1,0 +1,24 @@
+{%- set library = kind == 'library' -%}
+{%- if library and framework == 'vue' -%}
+import { ref } from 'vue'
+{% endif -%}
+import { describe, expect, it } from 'vitest'
+import { greeting{{ ', useGreeting' if library and framework == 'vue' }} } from '../src/{{ 'index' if library else 'greeting' }}.ts'
+
+describe('greeting', () => {
+  it('greets by name', () => {
+    expect(greeting('world')).toBe('Hello, world')
+  })
+})
+{%- if library and framework == 'vue' %}
+
+describe('useGreeting', () => {
+  it('follows the name', () => {
+    const name = ref('world')
+    const message = useGreeting(name)
+    expect(message.value).toBe('Hello, world')
+    name.value = 'you'
+    expect(message.value).toBe('Hello, you')
+  })
+})
+{%- endif %}

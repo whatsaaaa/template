@@ -1,0 +1,6 @@
+# The stack-neutral layer only, as for a .NET, Nix or profile repository
+name: demo-base
+description: A demo repository of the stack-neutral layer
+visibility: public
+stack: base
+brand_kit: building-blocks

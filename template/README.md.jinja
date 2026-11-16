@@ -1,0 +1,78 @@
+{%- from 'includes/markdown.jinja' import table -%}
+{%- set typescript = stack == 'typescript' -%}
+{%- set repo = 'https://github.com/' ~ owner ~ '/' ~ name -%}
+<img src="./.github/assets/readme-header.svg" alt="{{ brand.name if brand_kit == owner else brand.name ~ ' - ' ~ brand.tagline }}" width="100%" />
+
+# {{ name }}
+{%- set badges = [] %}
+{%- if typescript %}
+  {%- set badges = badges + ['[![CI](' ~ repo ~ '/actions/workflows/ci.yml/badge.svg)](' ~ repo ~ '/actions/workflows/ci.yml)'] %}
+{%- endif %}
+{%- if publish %}
+  {%- set badges = badges + ['[![npm](https://img.shields.io/npm/v/' ~ package_name ~ ')](https://www.npmjs.com/package/' ~ package_name ~ ')'] %}
+{%- endif %}
+{%- if visibility == 'public' and license == 'MIT' %}
+  {%- set badges = badges + ['[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)'] %}
+{%- endif %}
+{%- if badges %}
+
+{{ badges | join('\n') }}
+{%- endif %}
+
+{{ description }}
+
+## Use it
+{% if not typescript %}
+Describe here how to use it.
+{%- elif kind == 'library' %}
+```sh
+pnpm add {{ package_name }}
+```
+
+```ts
+import { greeting } from '{{ package_name }}'
+
+greeting('world') // 'Hello, world'
+```
+{%- elif pages %}
+It is live at {{ pages_url }}.
+{%- else %}
+Run it with `pnpm dev`.
+{%- endif %}
+{%- if typescript %}
+
+## Working on it
+
+You need Node.js ({{ '22.23.4' if framework == 'astro' else '22.18' }} or later on 22, or 24.12 or later) and [pnpm](https://pnpm.io/installation), which switches itself to the version `packageManager` names in `package.json`.
+
+```sh
+pnpm install
+```
+{%- set rows = [] %}
+{%- if web_dir %}{% set rows = rows + [['`pnpm dev`', 'Starts ' ~ ('the docs app' if kind == 'library' else 'the ' ~ kind) ~ ' on a local server']] %}{% endif %}
+{%- set rows = rows + [['`pnpm build`', 'Builds ' ~ ('the package into `dist/`' if kind == 'library' and not docs_dir else 'the package and the docs app' if kind == 'library' else 'the ' ~ kind ~ ' into `dist/`')]] %}
+{%- set rows = rows + [['`pnpm test`', 'Runs the unit tests']] %}
+{%- if browser_tests %}{% set rows = rows + [['`pnpm test:browser`', 'Builds ' ~ ('the docs app' if kind == 'library' else 'the ' ~ kind) ~ ' and tests it in a browser']] %}{% endif %}
+{%- set rows = rows + [['`pnpm lint`', 'Checks the code' ~ (', the stylesheets' if design_system else '') ~ (' and the package as it is packed' if publish else '') ~ ', fixing what it can']] %}
+{%- set rows = rows + [['`pnpm type-check`', 'Type-checks everything'], ['`pnpm format`', 'Formats everything']] %}
+{%- if publish %}{% set rows = rows + [['`pnpm changeset`', 'Records a change to the package for the next release']] %}{% endif %}
+
+{{ table(['Command', 'What it does'], rows) }}
+{%- endif %}
+{%- if publish %}
+
+## Releasing
+
+1. A pull request that changes what the package ships adds a changeset with `pnpm changeset`.
+2. When it merges, the release workflow, `.github/workflows/release.yml`, opens a Version Packages pull request that bumps the version and writes the changelog.
+3. Merging that one starts the publish job. It waits for a reviewer to approve the `npm` environment, then publishes to npm through trusted publishing, with provenance. No npm token is stored anywhere.
+
+That needs an `npm` environment with a required reviewer, "Allow GitHub Actions to create and approve pull requests" in the repository's Actions settings, and a trusted publisher on the package's npm settings for `release.yml` and the environment `npm`. npm sets up a trusted publisher only for a package that exists, so the first version is published by hand.
+{%- endif %}
+
+## License
+{% if license == 'MIT' %}
+[MIT](./LICENSE)
+{%- else %}
+All rights reserved.
+{%- endif %}

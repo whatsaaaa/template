@@ -1,0 +1,7 @@
+import whatsaaaa from '@whatsaaaa/eslint-config'
+
+{% set options = [] -%}
+{% if framework == 'vue' %}{% set options = options + ['vue: true'] %}{% endif -%}
+{% if framework == 'react' %}{% set options = options + ['react: true'] %}{% endif -%}
+{% if framework == 'astro' %}{% set options = options + ["ignores: ['**/.astro/**']"] %}{% endif -%}
+export default whatsaaaa({{ '{ ' ~ options | join(', ') ~ ' }' if options else '' }})

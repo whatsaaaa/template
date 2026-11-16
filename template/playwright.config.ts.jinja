@@ -1,0 +1,31 @@
+import { defineConfig, devices } from '@playwright/test'
+
+/**
+ * Browser tests of the built {{ 'docs app' if kind == 'library' else kind }}, which "pnpm test:browser" builds first.
+ */
+export default defineConfig({
+  testDir: 'tests/browser',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  use: {
+    ...devices['Desktop Chrome'],
+    baseURL: 'http://127.0.0.1:4173{{ base_path }}',
+    colorScheme: 'dark',
+  },
+  webServer: {
+{%- if ui == 'astro' %}
+    // --ignore-lock keeps the server in the foreground, where Playwright stops it: Astro starts it
+    // in the background when it detects a coding agent
+{%- endif %}
+{%- set command = "'" ~ ('pnpm' if web_dir == '.' else 'pnpm --filter ./' ~ web_dir) ~ ' preview --host 127.0.0.1 --port 4173 ' ~ ('--ignore-lock' if ui == 'astro' else '--strictPort') ~ "'," %}
+{%- if ('    command: ' ~ command) | length <= 100 %}
+    command: {{ command }}
+{%- else %}
+    command:
+      {{ command }}
+{%- endif %}
+    url: 'http://127.0.0.1:4173{{ base_path }}',
+    reuseExistingServer: !process.env.CI,
+  },
+})

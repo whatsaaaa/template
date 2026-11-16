@@ -1,0 +1,60 @@
+{%- from 'includes/json.jinja' import deps, pairs with context -%}
+{%- import 'includes/own.jinja' as own with context -%}
+{%- set library = kind == 'library' -%}
+{%- set scripts = own.scripts + [['type-check', own.type_check]] -%}
+{%- if publish %}{% set scripts = scripts + [['lint:package', own.lint_package]] %}{% endif -%}
+{
+  "name": {{ package_name | to_json }},
+{%- if publish %}
+  "version": "0.0.0",
+{%- else %}
+  "private": true,
+{%- endif %}
+  "description": {{ description | to_json(ensure_ascii=False) }},
+{%- if publish %}
+  "keywords": [],
+  "homepage": "https://github.com/{{ owner }}/{{ name }}/tree/main/{{ member_dir }}#readme",
+  "bugs": "https://github.com/{{ owner }}/{{ name }}/issues",
+{%- endif %}
+  "license": {{ (license if license == 'MIT' else 'UNLICENSED') | to_json }},
+  "author": "Whatsaaaa",
+{%- if publish %}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/{{ owner }}/{{ name }}.git",
+    "directory": "{{ member_dir }}"
+  },
+{%- endif %}
+{%- if library %}
+  "files": [
+    "dist"
+  ],
+{%- endif %}
+  "type": "module",
+{%- if library %}
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+{%- endif %}
+{%- if publish %}
+  "publishConfig": {
+    "access": "public"
+  },
+{%- endif %}
+  "scripts": {{ pairs(scripts) }},
+{%- if own.dependencies %}
+  "dependencies": {{ deps(own.dependencies) }},
+{%- endif %}
+  "devDependencies": {{ deps(own.dev) }},
+{%- if own.peer %}
+  "peerDependencies": {{ deps(own.peer) }},
+{%- endif %}
+  "engines": {
+    "node": {{ node_range | to_json }}
+  }
+}

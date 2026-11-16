@@ -1,0 +1,10 @@
+{%- from 'includes/tsconfig.jinja' import own_tsconfig with context -%}
+{%- if workspace == 'single' -%}
+{{ own_tsconfig() }}
+{%- else -%}
+// The configs and the tests at the root. Each package has its own.
+{
+  "extends": "@whatsaaaa/tsconfig/node.json",
+  "include": ["tests", "*.config.ts"]
+}
+{%- endif %}

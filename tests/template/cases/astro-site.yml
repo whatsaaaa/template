@@ -1,0 +1,5 @@
+# A public Astro site on GitHub Pages: the answers' defaults for a site
+name: demo-astro-site
+description: A demo Astro site on GitHub Pages
+visibility: public
+kind: site

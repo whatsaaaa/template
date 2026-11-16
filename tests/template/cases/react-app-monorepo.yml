@@ -1,0 +1,8 @@
+# A React app in a workspace, on GitHub Pages, with a project's own brand kit
+name: demo-react-app
+description: A demo React app in a workspace
+kind: app
+workspace: monorepo
+framework: react
+pages: true
+brand_kit: form-builder
