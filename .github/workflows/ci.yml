@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Checks every workflow, with shellcheck on their scripts. Its config is .github/actionlint.yaml.
+      - uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  # The shared workflow and the setup action as a project calls them, on tests/fixtures/node-project,
+  # whose scripts fail when the job is set up wrong.
+  node-ci:
+    uses: ./.github/workflows/node-ci.yml
+    with:
+      working-directory: tests/fixtures/node-project
+      playwright-version: 1.65.0
+
+  # The setup action's inputs that node-ci.yml leaves at their defaults.
+  setup:
+    name: setup (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # No cache either: with nothing installed, the job would save an empty store under the
+          # key the installing jobs restore.
+          - name: no install
+            install: false
+            frozen-lockfile: true
+            cache: false
+          - name: unfrozen, no cache
+            install: true
+            frozen-lockfile: false
+            cache: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '22'
+          working-directory: tests/fixtures/node-project
+          install: ${{ matrix.install }}
+          frozen-lockfile: ${{ matrix.frozen-lockfile }}
+          cache: ${{ matrix.cache }}
+      - name: Check what the action set up
+        working-directory: tests/fixtures/node-project
+        env:
+          INSTALL: ${{ matrix.install }}
+        run: |
+          node --version | grep -q '^v22\.' || { echo "::error::expected Node.js 22, got $(node --version)"; exit 1; }
+          pnpm --version | grep -q '^12\.' || { echo "::error::expected pnpm 12, got $(pnpm --version)"; exit 1; }
+          if [ "$INSTALL" = true ]; then
+            test -d node_modules/typescript || { echo "::error::the dependencies are not installed"; exit 1; }
+          else
+            test ! -e node_modules || { echo "::error::installed although install is false"; exit 1; }
+          fi

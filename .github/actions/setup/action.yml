@@ -1,0 +1,46 @@
+name: Setup
+description: >
+  Sets up pnpm (the version from package.json's packageManager), Node.js with the pnpm store
+  cache, and installs the dependencies. Check out the repository first, with
+  persist-credentials: false.
+
+inputs:
+  node-version:
+    description: The Node.js version to set up.
+    default: '24'
+  working-directory:
+    description: The directory of the package.json and pnpm-lock.yaml, relative to the repository root.
+    default: .
+  install:
+    description: Whether to run pnpm install.
+    default: 'true'
+  frozen-lockfile:
+    description: Whether pnpm install fails when pnpm-lock.yaml is out of date.
+    default: 'true'
+  cache:
+    description: Whether to restore and save the pnpm store. Release jobs turn it off, so a cache never reaches what they publish.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      with:
+        package_json_file: ${{ inputs.working-directory }}/package.json
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: ${{ inputs.cache == 'true' && 'pnpm' || '' }}
+        cache-dependency-path: ${{ inputs.cache == 'true' && format('{0}/pnpm-lock.yaml', inputs.working-directory) || '' }}
+        package-manager-cache: ${{ inputs.cache == 'true' }}
+    - if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        FROZEN_LOCKFILE: ${{ inputs.frozen-lockfile }}
+      run: |
+        if [ "$FROZEN_LOCKFILE" = true ]; then
+          pnpm install --frozen-lockfile
+        else
+          pnpm install --no-frozen-lockfile
+        fi
