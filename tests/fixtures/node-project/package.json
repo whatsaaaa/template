@@ -1,0 +1,22 @@
+{
+  "name": "node-ci-fixture",
+  "private": true,
+  "description": "The smallest pnpm project node-ci.yml and the setup action run on, so a broken shared workflow fails in this repository first",
+  "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "format:check": "node scripts/ci-step.ts format:check",
+    "lint": "node scripts/ci-step.ts lint",
+    "type-check": "tsc",
+    "test": "node --test \"tests/*.test.ts\"",
+    "build": "node scripts/ci-step.ts build",
+    "test:browser": "node scripts/ci-step.ts test:browser"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3"
+  }
+}

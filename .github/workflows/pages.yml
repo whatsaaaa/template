@@ -1,0 +1,95 @@
+# Builds a static site with a package.json script and deploys it to GitHub Pages. The caller
+# keeps its `on:` (with its paths) and the pages concurrency group:
+#
+#   on:
+#     push:
+#       branches: [main]
+#     workflow_dispatch:
+#   permissions: {}
+#   # One deployment at a time, and an in-progress deployment is never cancelled.
+#   concurrency:
+#     group: pages
+#     cancel-in-progress: false
+#   jobs:
+#     pages:
+#       uses: whatsaaaa/template/.github/workflows/pages.yml@v1
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+#       with:
+#         artifact-path: dist
+#
+# The repository needs Pages built by GitHub Actions and a `github-pages` environment with the
+# branch policy main.
+name: Pages
+
+on:
+  workflow_call:
+    inputs:
+      build-script:
+        description: The package.json script that builds the site.
+        type: string
+        default: build
+      artifact-path:
+        description: The directory the build writes the site to, relative to the repository root.
+        type: string
+        required: true
+      fetch-depth:
+        description: The number of commits to fetch; 0 fetches the whole history, which VitePress's lastUpdated reads.
+        type: number
+        default: 1
+      node-version:
+        description: The Node.js version to set up.
+        type: string
+        default: '24'
+      working-directory:
+        description: The directory of the project, relative to the repository root.
+        type: string
+        default: .
+    outputs:
+      page-url:
+        description: The URL of the deployed site.
+        value: ${{ jobs.deploy.outputs.page-url }}
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: ${{ inputs.fetch-depth }}
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+        with:
+          node-version: ${{ inputs.node-version }}
+          working-directory: ${{ inputs.working-directory }}
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - run: pnpm run "$BUILD_SCRIPT"
+        env:
+          BUILD_SCRIPT: ${{ inputs.build-script }}
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ inputs.artifact-path }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      page-url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
