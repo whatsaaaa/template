@@ -42,10 +42,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # No cache either: with nothing installed, the job would save an empty store under the
+          # key the installing jobs restore.
           - name: no install
             install: false
             frozen-lockfile: true
-            cache: true
+            cache: false
           - name: unfrozen, no cache
             install: true
             frozen-lockfile: false
