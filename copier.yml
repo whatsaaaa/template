@@ -1,0 +1,311 @@
+# The Copier template of whatsaaaa projects. README.md says how to create a project from it and
+# how to update one; the files it renders are in template/.
+#
+# No _tasks, no _migrations and no _jinja_extensions: hosted Renovate runs `copier update`
+# without --trust, so a template that needs none of them can be updated in every project.
+
+_min_copier_version: '9.15.0'
+_subdirectory: template
+_envops:
+  # A misspelled variable fails the render instead of leaving a blank
+  undefined: jinja2.StrictUndefined
+
+# Seeded files: rendered once, then the project's own, which `copier update` leaves alone. Every
+# other file is managed: `copier update` carries the template's changes into it.
+_skip_if_exists:
+  - README.md
+  - AGENTS.md
+  - package.json
+  - '*/*/package.json'
+  - vitest.config.ts
+  - playwright.config.ts
+  - vite.config.ts
+  - '*/*/vite.config.ts'
+  - astro.config.ts
+  - '*/*/astro.config.ts'
+  - index.html
+  - '*/*/index.html'
+  - /src/
+  - '/*/*/src/'
+  - /tests/
+  - '/*/*/tests/'
+
+# What the answers leave out. Paths starting with / are from the project root; `pkg` is the
+# prefix of the project's own package, empty or packages/<name>/.
+_exclude:
+  # stack: base, the stack-neutral layer only
+  - "{% if stack == 'base' %}/package.json{% endif %}"
+  - "{% if stack == 'base' %}/pnpm-workspace.yaml{% endif %}"
+  - "{% if stack == 'base' %}/tsconfig.json{% endif %}"
+  - "{% if stack == 'base' %}/.oxlintrc.json{% endif %}"
+  - "{% if stack == 'base' %}/oxfmt.config.ts{% endif %}"
+  - "{% if stack == 'base' %}/eslint.config.ts{% endif %}"
+  - "{% if stack == 'base' %}/vitest.config.ts{% endif %}"
+  - "{% if stack == 'base' %}/.vscode/{% endif %}"
+  - "{% if stack == 'base' %}/.github/workflows/{% endif %}"
+  - "{% if stack == 'base' %}/src/{% endif %}"
+  - "{% if stack == 'base' %}/tests/{% endif %}"
+  - "{% if stack == 'base' %}/packages/{% endif %}"
+  - "{% if stack == 'base' %}/apps/{% endif %}"
+  - "{% if stack == 'typescript' %}/.no-mistakes.yaml{% endif %}"
+  # license and agents_md
+  - "{% if license == 'none' %}/LICENSE{% endif %}"
+  - "{% if not agents_md %}/AGENTS.md{% endif %}"
+  - "{% if not agents_md %}/CLAUDE.md{% endif %}"
+  # publish, pages, design_system, browser_tests
+  - "{% if not publish %}/.changeset/{% endif %}"
+  - "{% if not publish %}/.github/workflows/release.yml{% endif %}"
+  - "{% if not pages %}/.github/workflows/pages.yml{% endif %}"
+  - "{% if not design_system %}/stylelint.config.js{% endif %}"
+  - "{% if not design_system %}favicon.svg{% endif %}"
+  - "{% if not design_system %}style.css{% endif %}"
+  - "{% if not browser_tests %}/playwright.config.ts{% endif %}"
+  - "{% if not browser_tests %}/tests/browser/{% endif %}"
+  - "{% if not browser_tests %}/tests/playwright-version.test.ts{% endif %}"
+  # kind and framework: the starter files. `web` is the prefix of the package with the pages.
+  - "{% if kind != 'library' %}/{{ pkg }}tsconfig.build.json{% endif %}"
+  - "{% if kind != 'library' %}/{{ pkg }}src/index.ts{% endif %}"
+  - "{% if kind == 'library' %}/{{ pkg }}src/greeting.ts{% endif %}"
+  - "{% if ui != 'vue' %}/{{ web }}src/App.vue{% endif %}"
+  - "{% if ui != 'react' %}/{{ web }}src/App.tsx{% endif %}"
+  - "{% if ui in ['react', 'astro'] %}/{{ web }}src/main.ts{% endif %}"
+  - "{% if ui != 'react' %}/{{ web }}src/main.tsx{% endif %}"
+  - "{% if ui != 'astro' %}/{{ web }}astro.config.ts{% endif %}"
+  - "{% if ui != 'astro' %}/{{ web }}src/pages/{% endif %}"
+  - "{% if ui == 'astro' %}/{{ web }}vite.config.ts{% endif %}"
+  - "{% if ui == 'astro' %}/{{ web }}index.html{% endif %}"
+
+_message_after_copy: |
+  {{ name }} is ready.
+  {%- if stack == 'typescript' %} Next:
+
+    pnpm install    # writes pnpm-lock.yaml, which CI installs from
+    pnpm lint && pnpm format:check && pnpm type-check && pnpm test && pnpm build
+  {%- endif %}
+
+  Commit everything, .copier-answers.yml too: `copier update` reads it.
+
+name:
+  type: str
+  help: The repository name, in kebab-case (dots allowed, as in a GitHub Pages user site)
+  default: '{{ _folder_name }}'
+  validator: >-
+    {% if not (name | regex_search('^[a-z0-9]+([.-][a-z0-9]+)*$')) %}lowercase letters and
+    digits, in words joined by a dash or a dot{% endif %}
+
+description:
+  type: str
+  help: One line about the project, for package.json, the README and the GitHub description
+  validator: >-
+    {% if not description | trim %}a description is required{% elif '\n' in description %}one
+    line only{% endif %}
+
+visibility:
+  type: str
+  help: The visibility of the GitHub repository
+  choices:
+    private: private
+    public: public
+  default: private
+
+stack:
+  type: str
+  help: The stack
+  choices:
+    TypeScript on pnpm: typescript
+    Only the stack-neutral files (for .NET, Nix or a profile repository): base
+  default: typescript
+
+kind:
+  type: str
+  help: What the project is
+  when: "{{ stack == 'typescript' }}"
+  choices:
+    A library: library
+    An app: app
+    A site: site
+  default: library
+
+workspace:
+  type: str
+  help: One package, or a pnpm workspace with the packages in packages/*
+  when: "{{ stack == 'typescript' }}"
+  choices:
+    One package: single
+    A pnpm workspace: monorepo
+  default: "{{ 'monorepo' if kind == 'library' else 'single' }}"
+
+publish:
+  type: bool
+  help: Publish the package to npm, with changesets and trusted publishing
+  when: "{{ stack == 'typescript' and kind == 'library' }}"
+  default: "{{ stack == 'typescript' and kind == 'library' and visibility == 'public' }}"
+
+framework:
+  type: str
+  help: The UI framework
+  when: "{{ stack == 'typescript' }}"
+  choices:
+    None: none
+    Vue: vue
+    React: react
+    Astro (a site only): astro
+  default: "{{ 'astro' if kind == 'site' else 'vue' if kind == 'app' else 'none' }}"
+  validator: "{% if framework == 'astro' and kind != 'site' %}Astro is for a site{% endif %}"
+
+design_system:
+  type: bool
+  help: Use the Whatsaaaa design system (its stylesheet, its stylelint rules and the favicon)
+  when: "{{ stack == 'typescript' }}"
+  default: "{{ stack == 'typescript' and kind != 'library' }}"
+
+pages:
+  type: bool
+  help: >-
+    Deploy to GitHub Pages: the app or site itself, or for a library a docs app in apps/docs
+  when: "{{ stack == 'typescript' }}"
+  default: "{{ stack == 'typescript' and kind == 'site' }}"
+  validator: >-
+    {% if pages and kind == 'library' and workspace == 'single' %}a library's docs app is in
+    apps/docs, which needs workspace: monorepo{% endif %}
+
+browser_tests:
+  type: bool
+  help: Test the built pages in a browser with Playwright, in CI too
+  when: "{{ stack == 'typescript' }}"
+  default: "{{ stack == 'typescript' and (kind != 'library' or pages) }}"
+  validator: >-
+    {% if browser_tests and kind == 'library' and not pages %}a library has no page to test
+    without its docs app (pages){% endif %}
+
+brand_kit:
+  type: str
+  help: >-
+    The README header: the handle's, or the project's own kit from the design system. A public
+    project with a kit takes its own; private trials and the handle's own repositories take the
+    handle's
+  choices:
+    whatsaaaa (the handle): whatsaaaa
+    building-blocks: building-blocks
+    dotfiles: dotfiles
+    form-builder: form-builder
+  default: whatsaaaa
+
+license:
+  type: str
+  help: The license
+  choices:
+    MIT: MIT
+    None: none
+  default: MIT
+
+copyright_year:
+  type: int
+  help: The year in the license, the year the project starts
+  when: "{{ license == 'MIT' }}"
+  default: "{{ '%Y' | strftime }}"
+
+agents_md:
+  type: bool
+  help: Add AGENTS.md, the instructions for coding agents, and CLAUDE.md importing it
+  default: true
+
+# Computed: never asked, and not recorded in .copier-answers.yml
+
+owner:
+  type: str
+  when: false
+  default: whatsaaaa
+
+ssh_url:
+  type: str
+  when: false
+  default: 'git@github.com:{{ owner }}/{{ name }}.git'
+
+# This repository's package.json: the versions a project starts with, which Renovate keeps
+# current here
+catalog:
+  type: json
+  when: false
+  default: "{% include 'package.json' %}"
+
+versions:
+  type: json
+  when: false
+  default: '{{ catalog.devDependencies | to_json }}'
+
+pnpm_version:
+  type: str
+  when: false
+  default: "{{ catalog.packageManager | regex_replace('^pnpm@', '') }}"
+
+node_range:
+  type: str
+  when: false
+  # Astro 7 needs Node 22.23.4 or later on 22
+  default: "{{ '^22.23.4 || >=24.12.0' if framework == 'astro' else '^22.18.0 || >=24.12.0' }}"
+
+# The kit's identity, from the design system, vendored in brand/
+brand:
+  type: json
+  when: false
+  default: "{% include 'brand/' ~ brand_kit ~ '/identity.json' %}"
+
+# A library's package is scoped; an app's or a site's is named after the repository
+package_name:
+  type: str
+  when: false
+  default: "{{ '@' ~ owner ~ '/' ~ name if kind == 'library' else name }}"
+
+# The folder of the project's own package: the root, or packages/<name> in a workspace. `pkg`
+# is the same as a prefix, and `member_dir` is empty for a single package, so the files only a
+# workspace member has are skipped.
+package_dir:
+  type: str
+  when: false
+  default: "{{ 'packages/' ~ name if workspace == 'monorepo' else '.' }}"
+
+pkg:
+  type: str
+  when: false
+  default: "{{ 'packages/' ~ name ~ '/' if workspace == 'monorepo' else '' }}"
+
+member_dir:
+  type: str
+  when: false
+  default: "{{ 'packages/' ~ name if workspace == 'monorepo' else '' }}"
+
+# A library's docs app, which Pages deploys
+docs_dir:
+  type: str
+  when: false
+  default: "{{ 'apps/docs' if stack == 'typescript' and kind == 'library' and pages else '' }}"
+
+# The package with the pages: the app or site, or a library's docs app. Empty for a library
+# without one, which skips the files of a page.
+web_dir:
+  type: str
+  when: false
+  default: "{{ docs_dir if kind == 'library' else package_dir }}"
+
+web:
+  type: str
+  when: false
+  default: "{{ '' if web_dir in ['', '.'] else web_dir ~ '/' }}"
+
+# The framework of the pages: a library's docs app is a plain page
+ui:
+  type: str
+  when: false
+  default: "{{ 'none' if kind == 'library' else framework }}"
+
+# The path the pages are served from on GitHub Pages: a user site's root, or /<name>/
+base_path:
+  type: str
+  when: false
+  default: "{{ '/' if not pages or name == owner ~ '.github.io' else '/' ~ name ~ '/' }}"
+
+pages_url:
+  type: str
+  when: false
+  default: 'https://{{ owner }}.github.io{{ base_path }}'

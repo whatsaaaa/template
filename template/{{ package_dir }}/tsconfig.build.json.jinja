@@ -1,0 +1,14 @@
+// The build: the package's source, compiled to dist/ with its type declarations
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+{%- if framework != 'none' %}
+    "rewriteRelativeImportExtensions": true,
+{%- endif %}
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}

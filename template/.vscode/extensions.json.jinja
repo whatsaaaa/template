@@ -1,0 +1,16 @@
+{%- set recommendations = ['oxc.oxc-vscode', 'dbaeumer.vscode-eslint', 'EditorConfig.EditorConfig'] -%}
+{%- if framework == 'vue' %}{% set recommendations = recommendations + ['Vue.volar'] %}{% endif -%}
+{%- if framework == 'astro' %}{% set recommendations = recommendations + ['astro-build.astro-vscode'] %}{% endif -%}
+{%- if design_system %}{% set recommendations = recommendations + ['stylelint.vscode-stylelint'] %}{% endif -%}
+{%- set inline = '  "recommendations": ' ~ recommendations | to_json -%}
+{
+{%- if inline | length <= 100 %}
+{{ inline }}
+{%- else %}
+  "recommendations": [
+{%- for recommendation in recommendations %}
+    "{{ recommendation }}"{{ ',' if not loop.last }}
+{%- endfor %}
+  ]
+{%- endif %}
+}

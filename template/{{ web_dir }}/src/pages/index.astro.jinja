@@ -1,0 +1,22 @@
+---
+import { greeting } from '../greeting.ts'
+{%- if design_system %}
+import '../style.css'
+{%- endif %}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+{%- if design_system %}
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+{%- endif %}
+    <title>{{ name }}</title>
+  </head>
+  <body>
+    <main>
+      <h1>{greeting('{{ name }}')}</h1>
+    </main>
+  </body>
+</html>

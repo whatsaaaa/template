@@ -1,0 +1,10 @@
+import { defineConfig } from 'oxfmt'
+import whatsaaaa from '@whatsaaaa/format-config/oxfmt'
+
+export default defineConfig({
+  ...whatsaaaa,
+{%- if framework == 'astro' %}
+  astro: true,
+{%- endif %}
+  ignorePatterns: ['pnpm-lock.yaml', '.github/assets'],
+})

@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-{% raw %}${{ github.ref }}{% endraw %}
+  cancel-in-progress: true
+
+jobs:
+  # The checks are named `ci / check`{{ ' and `ci / browser`' if browser_tests }}, which the main ruleset requires
+  ci:
+    uses: whatsaaaa/template/.github/workflows/node-ci.yml@v1
+{%- if browser_tests %}
+    with:
+      # The version of @playwright/test in package.json, which is the tag of the Playwright image
+      # the browser job runs in. tests/playwright-version.test.ts holds the two together.
+      playwright-version: {{ versions['@playwright/test'] }}
+{%- endif %}

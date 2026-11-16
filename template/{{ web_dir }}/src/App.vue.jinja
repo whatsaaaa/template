@@ -1,0 +1,11 @@
+<script setup lang="ts">
+import { greeting } from './greeting.ts'
+
+const title = greeting('{{ name }}')
+</script>
+
+<template>
+  <main>
+    <h1>{% raw %}{{ title }}{% endraw %}</h1>
+  </main>
+</template>

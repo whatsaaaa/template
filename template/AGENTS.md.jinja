@@ -1,0 +1,54 @@
+{%- set typescript = stack == 'typescript' -%}
+# {{ name }}
+
+{{ description }}
+
+This file is for coding agents. `CLAUDE.md` imports it.
+{%- if typescript %}
+
+## Commands
+
+Node.js and pnpm, at the version `packageManager` names in `package.json`. Run `pnpm install` first.
+
+- `pnpm lint`: oxlint, then ESLint{{ ', then stylelint' if design_system }}{{ ', then publint and attw on the packed package' if publish }}. It fixes what it can, so commit what it changes.
+- `pnpm format`: formats everything with oxfmt. `pnpm format:check` only checks.
+- `pnpm type-check`: type-checks everything.
+- `pnpm test`: the unit tests, with Vitest.
+{%- if browser_tests %}
+- `pnpm test:browser`: builds {{ 'the docs app' if kind == 'library' else 'the ' ~ kind }} and tests it in a browser, with Playwright.
+{%- endif %}
+- `pnpm build`: builds {{ 'the package' if kind == 'library' else 'the ' ~ kind }}{{ ' and the docs app' if docs_dir }}.
+
+CI runs `format:check`, `lint`, `type-check`, `test` and `build`{{ ', then the browser tests' if browser_tests }}, and fails when `lint` changed a file. Run them before you push.
+
+## Layout
+
+{% if workspace == 'monorepo' -%}
+- `{{ member_dir }}/`: {{ package_name }}, with its `src/` and `tests/`
+{%- if docs_dir %}
+- `{{ docs_dir }}/`: the docs app, deployed to GitHub Pages
+{%- endif %}
+{%- else -%}
+- `src/`: the source
+- `tests/`: the unit tests
+{%- endif %}
+{%- if browser_tests %}
+- `tests/browser/`: the browser tests
+{%- endif %}
+- `.github/workflows/`: CI{{ ', the release' if publish }}{{ ', the GitHub Pages deployment' if pages }}, calling the shared workflows of whatsaaaa/template
+{%- endif %}
+
+## House rules
+
+- Never use the em dash. Use a plain dash (-) instead.
+{%- set generated = ['`.copier-answers.yml`'] + (['`pnpm-lock.yaml`'] if typescript else []) + (['`CHANGELOG.md`'] if publish else []) %}
+- Never edit a generated file by hand: {{ generated | join(', ') }} and anything else a tool writes. Change its source and run the tool instead.
+{%- if publish %}
+- A change to what the package ships adds a changeset (`pnpm changeset`), which writes the release notes. Never bump the version by hand.
+{%- endif %}
+- The shared files come from the template, [whatsaaaa/template](https://github.com/whatsaaaa/template), and `copier update` brings its changes. A change that every project should have goes to the template.
+- Commits are signed. No commit or pull request carries an AI or agent attribution line.
+
+## This project
+
+What an agent should know about this project that the code does not say.

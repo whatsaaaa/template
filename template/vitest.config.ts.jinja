@@ -1,0 +1,11 @@
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+{%- if workspace == 'single' %}
+    include: ['tests/*.test.ts'],
+{%- else %}
+    include: ['tests/*.test.ts', 'packages/*/tests/*.test.ts'],
+{%- endif %}
+  },
+})

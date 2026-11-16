@@ -1,0 +1,103 @@
+{%- from 'includes/json.jinja' import deps, pairs with context -%}
+{%- import 'includes/own.jinja' as own with context -%}
+{%- set single = workspace == 'single' -%}
+{%- set library = kind == 'library' -%}
+
+{#- The tools every project runs from its root #}
+{%- set dev = ['@types/node', '@whatsaaaa/eslint-config', '@whatsaaaa/format-config',
+  '@whatsaaaa/oxlint-config', '@whatsaaaa/tsconfig', 'eslint', 'jiti', 'npm-run-all2', 'oxfmt',
+  'oxlint', 'typescript', 'vitest'] -%}
+{%- if framework == 'astro' %}{% set dev = dev + ['@astrojs/compiler-rs'] %}{% endif -%}
+{%- if browser_tests %}{% set dev = dev + ['@playwright/test'] %}{% endif -%}
+{%- if design_system %}
+  {%- set dev = dev + ['stylelint', 'stylelint-config-standard',
+    'stylelint-value-no-unknown-custom-properties'] %}
+  {%- if framework == 'vue' %}{% set dev = dev + ['postcss-html'] %}{% endif %}
+  {#- stylelint reads the tokens from the root #}
+  {%- if not single %}{% set dev = dev + ['@whatsaaaa/design-system'] %}{% endif %}
+{%- endif -%}
+{%- if publish %}
+  {%- set dev = dev + ['@arethetypeswrong/cli', '@changesets/changelog-github', '@changesets/cli',
+    'publint'] %}
+{%- endif -%}
+
+{#- In a workspace, the package's own scripts and dependencies are in packages/<name> #}
+{%- if single %}{% set dev = dev + own.dev %}{% endif -%}
+
+{%- set scripts = [] -%}
+{%- if single %}{% set scripts = scripts + own.scripts %}
+{%- else %}
+  {%- if web_dir %}{% set scripts = scripts + [['dev', 'pnpm --filter ./' ~ web_dir ~ ' dev']] %}{% endif %}
+  {%- set scripts = scripts + [['build', 'pnpm -r build']] %}
+{%- endif -%}
+{%- set scripts = scripts + [['test', 'vitest run']] -%}
+{%- if browser_tests %}
+  {%- set scripts = scripts + [['test:browser', 'run-s build test:browser:run'],
+    ['test:browser:run', 'playwright test']] %}
+{%- endif -%}
+{%- set scripts = scripts + [['type-check', own.type_check if single else 'tsc && pnpm -r type-check'],
+  ['lint', 'run-s "lint:*"'], ['lint:oxlint', 'oxlint . --fix'],
+  ['lint:eslint', 'eslint . --fix --cache']] -%}
+{%- if design_system %}
+  {%- set scripts = scripts + [['lint:css', 'stylelint "**/*.{css,vue}" --fix --allow-empty-input']] %}
+{%- endif -%}
+{%- if publish %}
+  {%- set scripts = scripts + [['lint:package', own.lint_package if single else 'pnpm -r lint:package']] %}
+{%- endif -%}
+{%- set scripts = scripts + [['format', 'oxfmt .'], ['format:check', 'oxfmt --check .']] -%}
+{%- if publish %}{% set scripts = scripts + [['changeset', 'changeset']] %}{% endif -%}
+{
+  "name": {{ (package_name if single else name ~ '-workspace') | to_json }},
+{%- if single and publish %}
+  "version": "0.0.0",
+{%- else %}
+  "private": true,
+{%- endif %}
+  "description": {{ description | to_json(ensure_ascii=False) }},
+{%- if single and publish %}
+  "keywords": [],
+  "homepage": "https://github.com/{{ owner }}/{{ name }}#readme",
+  "bugs": "https://github.com/{{ owner }}/{{ name }}/issues",
+{%- endif %}
+  "license": {{ (license if license == 'MIT' else 'UNLICENSED') | to_json }},
+  "author": "Whatsaaaa",
+{%- if single and publish %}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/{{ owner }}/{{ name }}.git"
+  },
+{%- endif %}
+{%- if single and library %}
+  "files": [
+    "dist"
+  ],
+{%- endif %}
+  "type": "module",
+{%- if single and library %}
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+{%- endif %}
+{%- if single and publish %}
+  "publishConfig": {
+    "access": "public"
+  },
+{%- endif %}
+  "scripts": {{ pairs(scripts) }},
+{%- if single and own.dependencies %}
+  "dependencies": {{ deps(own.dependencies) }},
+{%- endif %}
+  "devDependencies": {{ deps(dev) }},
+{%- if single and own.peer %}
+  "peerDependencies": {{ deps(own.peer) }},
+{%- endif %}
+  "engines": {
+    "node": {{ node_range | to_json }}
+  },
+  "packageManager": "pnpm@{{ pnpm_version }}"
+}

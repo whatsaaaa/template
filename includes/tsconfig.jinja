@@ -1,0 +1,18 @@
+{#- The tsconfig.json of the project's own package, imported with context #}
+{%- macro own_tsconfig() -%}
+{%- set node = kind == 'library' and framework == 'none' -%}
+{%- set types = ['node'] if node or framework == 'astro' or kind == 'library' else ['vite/client', 'node'] -%}
+{%- set include = ([] if framework != 'astro' else ['.astro/types.d.ts']) + ['src'] + (['src/**/*.vue'] if framework == 'vue' else []) + ['tests', '*.config.ts'] -%}
+{
+  "extends": "@whatsaaaa/tsconfig/{{ 'node' if node else 'bundler' }}.json",
+{%- if not node %}
+  "compilerOptions": {
+{%- if framework == 'react' %}
+    "jsx": "react-jsx",
+{%- endif %}
+    "types": {{ types | to_json }}
+  },
+{%- endif %}
+  "include": {{ include | to_json }}
+}
+{%- endmacro %}

@@ -1,0 +1,21 @@
+{%- if framework == 'vue' -%}
+import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
+
+{% elif framework == 'react' -%}
+import { useMemo } from 'react'
+
+{% endif -%}
+export function greeting(name: string): string {
+  return `Hello, ${name}`
+}
+{%- if framework == 'vue' %}
+
+export function useGreeting(name: MaybeRefOrGetter<string>): ComputedRef<string> {
+  return computed(() => greeting(toValue(name)))
+}
+{%- elif framework == 'react' %}
+
+export function useGreeting(name: string): string {
+  return useMemo(() => greeting(name), [name])
+}
+{%- endif %}

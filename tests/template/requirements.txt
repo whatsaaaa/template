@@ -1,0 +1,2 @@
+# The Copier the template CI renders with. Renovate keeps it current.
+copier==9.19.1

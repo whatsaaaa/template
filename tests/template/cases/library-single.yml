@@ -1,0 +1,7 @@
+# A public library of one package, published to npm
+name: demo-library
+description: A demo library of one package, published to npm
+visibility: public
+kind: library
+workspace: single
+publish: true

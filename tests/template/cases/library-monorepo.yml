@@ -1,0 +1,11 @@
+# A public Vue library in a workspace, published to npm, with a docs app on GitHub Pages
+name: demo-monorepo
+description: A demo Vue library in a workspace, with a docs app
+visibility: public
+kind: library
+workspace: monorepo
+publish: true
+framework: vue
+design_system: true
+pages: true
+browser_tests: true

@@ -1,0 +1,38 @@
+.DS_Store
+Thumbs.db
+*.log
+*.local
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+{%- if stack == 'typescript' %}
+
+node_modules
+dist
+coverage
+*.tsbuildinfo
+*.tgz
+.eslintcache
+{%- if publish %}
+
+# Packed by lint:package for attw to check
+.attw
+{%- endif %}
+{%- if framework == 'astro' %}
+
+# Astro
+.astro
+{%- endif %}
+{%- if browser_tests %}
+
+# Playwright
+/test-results
+/playwright-report
+/blob-report
+{%- endif %}
+{%- endif %}

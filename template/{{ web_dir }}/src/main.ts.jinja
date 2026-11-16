@@ -1,0 +1,21 @@
+{%- if ui == 'vue' -%}
+import { createApp } from 'vue'
+import App from './App.vue'
+{%- if design_system %}
+import './style.css'
+{%- endif %}
+
+createApp(App).mount('#app')
+{%- else -%}
+import { greeting } from '{{ package_name if kind == 'library' else './greeting.ts' }}'
+{%- if design_system %}
+import './style.css'
+{%- endif %}
+
+const app = document.querySelector('#app')
+if (app) {
+  const heading = document.createElement('h1')
+  heading.textContent = greeting('{{ name }}')
+  app.append(heading)
+}
+{%- endif %}
