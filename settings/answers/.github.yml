@@ -1,0 +1,4 @@
+# Answers for a repository without .copier-answers.yml yet, in the same
+# format. Delete this file once the repository is rendered from the template.
+description: Default community health files and Renovate preset for whatsaaaa repositories
+stack: base

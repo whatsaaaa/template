@@ -1,0 +1,5 @@
+{
+  "repository": {
+    "pull_request_creation_policy": "collaborators_only"
+  }
+}

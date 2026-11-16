@@ -1,0 +1,12 @@
+whatsaaaa/demo (public, answers: .copier-answers.yml + --set publish + --set description)
+  drift  repository.description: "Demo: a library that's small" -> "Other"
+  drift  actions.can_approve_pull_request_reviews: true -> false
+  ok     security
+  ok     rulesets.main
+  ok     pages
+  ok     environments.github-pages
+  ok     environments.github-pages.branch_policies
+  ok     labels
+  note   labels: left alone: release
+  2 drifted
+exit 1

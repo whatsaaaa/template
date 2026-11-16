@@ -1,0 +1,12 @@
+whatsaaaa/dotfiles (public, answers: settings/answers/dotfiles.yml)
+  drift  repository.allow_squash_merge: true -> false
+  drift  repository.allow_rebase_merge: true -> false
+  drift  repository.delete_branch_on_merge: false -> true
+  drift  repository.allow_update_branch: false -> true
+  ok     actions
+  drift  security.vulnerability_alerts: false -> true
+  drift  security.private_vulnerability_reporting: false -> true
+  drift  rulesets.main: absent -> present
+  ok     labels
+  7 drifted
+exit 1
