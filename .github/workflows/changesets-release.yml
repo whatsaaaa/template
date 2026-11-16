@@ -13,6 +13,7 @@
 #     release:
 #       uses: whatsaaaa/template/.github/workflows/changesets-release.yml@v1
 #       permissions:
+#         actions: write # starts CI on the Version Packages pull request
 #         contents: write # Version Packages pull request, git tags and GitHub releases
 #         pull-requests: write # Version Packages pull request
 #         id-token: write # npm OIDC
@@ -20,10 +21,20 @@
 # The repository needs an `npm` environment (a required reviewer, branch policy main), "Allow
 # GitHub Actions to create and approve pull requests", and a trusted publisher on npm for
 # release.yml and the environment npm. Each package builds itself in its prepack script.
+#
+# GitHub starts no pull_request run for a pull request this workflow's token updates, so the
+# version job starts the caller's CI workflow on the Version Packages branch instead, for the
+# required checks. That workflow needs a `workflow_dispatch` trigger; pass its file name as
+# `ci-workflow` when it is not ci.yml.
 name: Changesets release
 
 on:
   workflow_call:
+    inputs:
+      ci-workflow:
+        description: File name of the CI workflow started on the Version Packages pull request
+        type: string
+        default: ci.yml
 
 permissions: {}
 
@@ -50,6 +61,7 @@ jobs:
     needs: select-mode
     runs-on: ubuntu-latest
     permissions:
+      actions: write # starts CI on the Version Packages pull request
       contents: write
       pull-requests: write
     steps:
@@ -62,6 +74,13 @@ jobs:
       - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # read by @changesets/changelog-github
+      # GitHub starts no pull_request run for a pull request this workflow's token updates, so the
+      # required CI check would never report on it. A workflow_dispatch it does start.
+      - run: gh workflow run "$CI_WORKFLOW" --ref "changeset-release/$GITHUB_REF_NAME"
+        env:
+          CI_WORKFLOW: ${{ inputs.ci-workflow }}
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
 
   pack:
     if: needs.select-mode.outputs.mode == 'publish'
