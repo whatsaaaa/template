@@ -12,7 +12,7 @@ breaking change to an input comes with a new major.
 | Workflow | What it runs | Inputs (default) |
 | --- | --- | --- |
 | [`node-ci.yml`](.github/workflows/node-ci.yml) | `check`: the package.json scripts in order, failing when `lint` auto-fixed a file. `browser`: the browser tests in the Playwright image, keeping the report of a failed run for 7 days | `scripts` (`format:check lint type-check test build`), `lint-fix-guard` (`true`), `timeout-minutes` (`15`), `playwright-version` (empty: no browser job), `browser-script` (`test:browser`), `node-version` (`24`), `working-directory` (`.`) |
-| [`changesets-release.yml`](.github/workflows/changesets-release.yml) | changesets' Version Packages pull request, then pack and publish to npm by trusted publishing, in the `npm` environment | none |
+| [`changesets-release.yml`](.github/workflows/changesets-release.yml) | changesets' Version Packages pull request, then pack and publish to npm by trusted publishing, in the `npm` environment. Starts the caller's CI on the Version Packages pull request, which needs `workflow_dispatch` | `ci-workflow` (`ci.yml`) |
 | [`pages.yml`](.github/workflows/pages.yml) | builds a site with a package.json script and deploys it to GitHub Pages | `build-script` (`build`), `artifact-path` (required), `fetch-depth` (`1`; `0` for VitePress `lastUpdated`), `node-version` (`24`), `working-directory` (`.`) |
 
 Each file starts with the caller it expects, the permissions to grant and the repository
