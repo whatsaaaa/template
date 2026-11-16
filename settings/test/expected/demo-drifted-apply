@@ -1,0 +1,26 @@
+whatsaaaa/demo (public, answers: .copier-answers.yml)
+  fix    repository.homepage: "" -> "https://whatsaaaa.github.io/demo/"
+  fix    repository.allow_squash_merge: true -> false
+  ok     actions
+  fix    security.secret_scanning_push_protection: "disabled" -> "enabled"
+  fix    security.vulnerability_alerts: false -> true
+  ok     rulesets.main
+  fix    pages: absent -> present
+  fix    environments.github-pages: absent -> present
+  fix    environments.npm.reviewers: [] -> [{"type":"User","id":346270425}]
+  fix    environments.npm.branch_policies.branch:release/*: present -> absent
+  fix    labels.accessibility: absent -> present
+  fix    labels.bug.color: "ff0000" -> "d73a4a"
+  note   labels: left alone: release
+  10 fixed
+exit 0
+PATCH repos/whatsaaaa/demo {"homepage":"https://whatsaaaa.github.io/demo/","allow_squash_merge":false}
+PATCH repos/whatsaaaa/demo {"security_and_analysis":{"secret_scanning_push_protection":{"status":"enabled"}}}
+PUT repos/whatsaaaa/demo/vulnerability-alerts null
+POST repos/whatsaaaa/demo/pages {"build_type":"workflow"}
+PUT repos/whatsaaaa/demo/environments/github-pages {"wait_timer":0,"prevent_self_review":false,"reviewers":[],"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
+POST repos/whatsaaaa/demo/environments/github-pages/deployment-branch-policies {"name":"main","type":"branch"}
+PUT repos/whatsaaaa/demo/environments/npm {"wait_timer":0,"prevent_self_review":false,"reviewers":[{"type":"User","id":346270425}],"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
+DELETE repos/whatsaaaa/demo/environments/npm/deployment-branch-policies/9 null
+POST repos/whatsaaaa/demo/labels {"name":"accessibility","color":"f143ab","description":"Barrier affecting people with disabilities"}
+PATCH repos/whatsaaaa/demo/labels/bug {"color":"d73a4a","description":"Something isn't working"}

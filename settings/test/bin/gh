@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# A stand-in for `gh api` that answers from recorded responses, for the
+# settings tests. It understands the arguments apply.sh passes:
+#   gh api -X <method> <path> [--input <file>] [-H <header>]
+#
+# FAKE_GH_RESPONSES  JSON object: {"<METHOD> <path>": {"status": n, "body": ...}}.
+#                    A GET without an entry answers 404; any other method
+#                    without an entry answers 200 with an empty object.
+# FAKE_GH_CALLS      every request is appended here as "<METHOD> <path> <body>".
+# FAKE_GH_RECORD     when set, GET requests go to the real gh (FAKE_GH_REAL) and
+#                    the responses are added to FAKE_GH_RESPONSES; any other
+#                    method is refused, so recording never changes a setting.
+
+set -euo pipefail
+
+[[ ${1-} == api ]] || {
+  echo "fake gh: only 'api' is supported" >&2
+  exit 1
+}
+shift
+method=GET path='' input='' header=''
+while (($#)); do
+  case $1 in
+    -X | --method) method=$2; shift ;;
+    --input) input=$2; shift ;;
+    -H | --header) header=$2; shift ;;
+    *) path=$1 ;;
+  esac
+  shift
+done
+
+body='null'
+if [[ -n $input ]]; then body=$(jq -c . "$input"); fi
+printf '%s %s %s\n' "$method" "$path" "$body" >>"${FAKE_GH_CALLS:-/dev/null}"
+key="$method $path"
+
+if [[ -n ${FAKE_GH_RECORD-} ]]; then
+  [[ $method == GET ]] || {
+    echo "fake gh: refusing $method while recording" >&2
+    exit 1
+  }
+  out=$(mktemp) err=$(mktemp)
+  args=(api "$path")
+  [[ -n $header ]] && args+=(-H "$header")
+  if "${FAKE_GH_REAL:?}" "${args[@]}" >"$out" 2>"$err"; then
+    if [[ -s $out ]]; then code=200; else code=204; fi
+  else
+    code=$(grep -oE 'HTTP [0-9]{3}' "$err" | tail -n 1 | cut -d ' ' -f 2)
+  fi
+  if [[ $header == *raw* ]]; then
+    recorded=$(jq -Rs . "$out")
+  elif [[ -s $out ]]; then
+    recorded=$(jq . "$out")
+  else
+    recorded=null
+  fi
+  [[ -f $FAKE_GH_RESPONSES ]] || echo '{}' >"$FAKE_GH_RESPONSES"
+  jq --arg k "$key" --argjson s "$code" --argjson b "$recorded" \
+    '.[$k] = {status: $s, body: $b}' "$FAKE_GH_RESPONSES" >"$out.new"
+  mv "$out.new" "$FAKE_GH_RESPONSES"
+  cat "$out"
+  cat "$err" >&2
+  rm -f "$out" "$err"
+  [[ $code == 200 || $code == 204 ]]
+  exit
+fi
+
+entry=$(jq -c --arg k "$key" '.[$k] // empty' "${FAKE_GH_RESPONSES:?}")
+if [[ -z $entry ]]; then
+  if [[ $method == GET ]]; then
+    entry='{"status":404,"body":{"message":"Not Found"}}'
+  else
+    entry='{"status":200,"body":{}}'
+  fi
+fi
+code=$(jq -r .status <<<"$entry")
+jq -r '.body | if . == null then empty elif type == "string" then . else tojson end' <<<"$entry"
+if ((code >= 400)); then
+  echo "gh: $(jq -r '.body.message // "error"' <<<"$entry") (HTTP $code)" >&2
+  exit 1
+fi

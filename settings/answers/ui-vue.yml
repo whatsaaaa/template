@@ -1,0 +1,14 @@
+# Answers for a repository without .copier-answers.yml yet, in the same
+# format. Delete this file once the repository is rendered from the template.
+description: Nuxt UI themed with the Whatsaaaa design system, for Vue and Nuxt
+stack: typescript
+kind: library
+workspace: monorepo
+framework: vue
+publish: false
+pages: false
+browser_tests: true
+# Settings only: the job names of today's ci.yml, until it calls the shared workflows.
+required_checks:
+  - check
+  - browser

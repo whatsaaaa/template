@@ -1,0 +1,3 @@
+# Answers given with --answers: merged over the repository's own.
+browser_tests: false
+required_checks: [ci / check, "lint"]

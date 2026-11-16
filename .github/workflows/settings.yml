@@ -1,0 +1,27 @@
+name: Settings
+
+on:
+  pull_request:
+    paths:
+      - settings/**
+      - .github/workflows/settings.yml
+  push:
+    branches: [main]
+    paths:
+      - settings/**
+      - .github/workflows/settings.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: settings-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: shellcheck settings/apply.sh settings/test/run.sh settings/test/record.sh settings/test/bin/gh
+      - run: settings/test/run.sh

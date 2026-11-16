@@ -1,0 +1,10 @@
+# Answers for a repository without .copier-answers.yml yet, in the same
+# format. Delete this file once the repository is rendered from the template.
+description: "Personal landing page: projects, tools and ideas"
+stack: typescript
+kind: site
+framework: astro
+pages: true
+# Settings only: the job names of today's ci.yml, until it calls the shared workflows.
+required_checks:
+  - check

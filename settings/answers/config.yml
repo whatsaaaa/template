@@ -1,0 +1,9 @@
+# Answers for a repository without .copier-answers.yml yet, in the same
+# format. Delete this file once the repository is rendered from the template.
+description: Shared TypeScript, lint and format configuration packages for whatsaaaa projects
+stack: typescript
+kind: library
+workspace: monorepo
+publish: true
+# Settings only: no CI yet.
+required_checks: []

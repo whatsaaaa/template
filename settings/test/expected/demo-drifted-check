@@ -1,0 +1,16 @@
+whatsaaaa/demo (public, answers: .copier-answers.yml)
+  drift  repository.homepage: "" -> "https://whatsaaaa.github.io/demo/"
+  drift  repository.allow_squash_merge: true -> false
+  ok     actions
+  drift  security.secret_scanning_push_protection: "disabled" -> "enabled"
+  drift  security.vulnerability_alerts: false -> true
+  ok     rulesets.main
+  drift  pages: absent -> present
+  drift  environments.github-pages: absent -> present
+  drift  environments.npm.reviewers: [] -> [{"type":"User","id":346270425}]
+  drift  environments.npm.branch_policies.branch:release/*: present -> absent
+  drift  labels.accessibility: absent -> present
+  drift  labels.bug.color: "ff0000" -> "d73a4a"
+  note   labels: left alone: release
+  10 drifted
+exit 1

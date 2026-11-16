@@ -1,0 +1,2 @@
+apply.sh: unknown option '--nope'
+exit 2

@@ -1,0 +1,22 @@
+whatsaaaa/config (public, answers: settings/answers/config.yml)
+  fix    repository.has_wiki: true -> false
+  fix    repository.has_projects: true -> false
+  fix    repository.allow_squash_merge: true -> false
+  fix    repository.allow_rebase_merge: true -> false
+  fix    repository.delete_branch_on_merge: false -> true
+  fix    repository.allow_update_branch: false -> true
+  fix    actions.can_approve_pull_request_reviews: false -> true
+  fix    security.vulnerability_alerts: false -> true
+  fix    security.private_vulnerability_reporting: false -> true
+  fix    rulesets.main: absent -> present
+  fix    environments.npm: absent -> present
+  ok     labels
+  11 fixed
+exit 0
+PATCH repos/whatsaaaa/config {"has_wiki":false,"has_projects":false,"allow_squash_merge":false,"allow_rebase_merge":false,"delete_branch_on_merge":true,"allow_update_branch":true}
+PUT repos/whatsaaaa/config/actions/permissions/workflow {"default_workflow_permissions":"read","can_approve_pull_request_reviews":true}
+PUT repos/whatsaaaa/config/vulnerability-alerts null
+PUT repos/whatsaaaa/config/private-vulnerability-reporting null
+POST repos/whatsaaaa/config/rulesets {"name":"main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"bypass_actors":[],"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_signatures"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["merge"]}}]}
+PUT repos/whatsaaaa/config/environments/npm {"wait_timer":0,"prevent_self_review":false,"reviewers":[{"type":"User","id":346270425}],"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
+POST repos/whatsaaaa/config/environments/npm/deployment-branch-policies {"name":"main","type":"branch"}

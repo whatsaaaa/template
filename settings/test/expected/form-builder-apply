@@ -1,0 +1,26 @@
+whatsaaaa/form-builder (public, answers: settings/answers/form-builder.yml)
+  fix    repository.homepage: "" -> "https://whatsaaaa.github.io/form-builder/"
+  fix    repository.allow_squash_merge: true -> false
+  fix    repository.allow_rebase_merge: true -> false
+  fix    repository.delete_branch_on_merge: false -> true
+  fix    repository.allow_update_branch: false -> true
+  ok     actions
+  fix    security.vulnerability_alerts: false -> true
+  fix    security.private_vulnerability_reporting: false -> true
+  fix    rulesets.main.bypass_actors: [{"actor_id":4229212,"actor_type":"Integration","bypass_mode":"always"},{"actor_id":4518051,"actor_type":"Integration","bypass_mode":"always"},{"actor_id":346270425,"actor_type":"User","bypass_mode":"always"}] -> []
+  fix    rulesets.main.rules.pull_request.allowed_merge_methods: ["merge","rebase","squash"] -> ["merge"]
+  fix    rulesets.main.rules.required_status_checks: absent -> {"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":["adapters-min (react)","adapters-min (vue)","check","consumer-smoke-min","node-22","react-18","valibot-min"]}
+  fix    rulesets.main.rules.creation: present -> absent
+  fix    rulesets.main.rules.update: present -> absent
+  ok     pages
+  ok     environments.github-pages
+  ok     environments.github-pages.branch_policies
+  ok     environments.npm
+  ok     environments.npm.branch_policies
+  ok     labels
+  12 fixed
+exit 0
+PATCH repos/whatsaaaa/form-builder {"homepage":"https://whatsaaaa.github.io/form-builder/","allow_squash_merge":false,"allow_rebase_merge":false,"delete_branch_on_merge":true,"allow_update_branch":true}
+PUT repos/whatsaaaa/form-builder/vulnerability-alerts null
+PUT repos/whatsaaaa/form-builder/private-vulnerability-reporting null
+PUT repos/whatsaaaa/form-builder/rulesets/26403401 {"name":"main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"bypass_actors":[],"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_signatures"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["merge"]}},{"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":[{"context":"check"},{"context":"valibot-min"},{"context":"react-18"},{"context":"adapters-min (react)"},{"context":"adapters-min (vue)"},{"context":"node-22"},{"context":"consumer-smoke-min"}]}}]}
