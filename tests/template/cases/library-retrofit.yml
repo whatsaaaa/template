@@ -1,0 +1,12 @@
+# An existing Vue library moved onto the template: no starter files, and browser tests of its own
+# pages, a playground, without a docs app. library-retrofit/ is the repository before the move.
+name: demo-retrofit
+description: A demo Vue library moved onto the template, with a playground
+visibility: public
+kind: library
+workspace: monorepo
+framework: vue
+design_system: true
+publish: false
+starter: false
+browser_tests: true

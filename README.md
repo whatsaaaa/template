@@ -16,9 +16,9 @@ copier copy --vcs-ref vX.Y.Z https://github.com/whatsaaaa/template.git my-projec
 
 It asks the questions of [`copier.yml`](copier.yml): name, description, visibility, the stack
 (TypeScript on pnpm, or `base`, only the stack-neutral files), and for TypeScript the kind (library,
-app or site), one package or a workspace, publishing to npm, the framework (none, Vue, React,
-Astro), the design system, browser tests and GitHub Pages; then the README header's brand kit, the
-license and `AGENTS.md`. `--data key=value` or `--data-file answers.yml` answers them up front, and
+app or site), one package or a workspace, the starter files, publishing to npm, the framework (none,
+Vue, React, Astro), the design system, browser tests and GitHub Pages; then the README header's
+brand kit, the license and `AGENTS.md`. `--data key=value` or `--data-file answers.yml` answers them up front, and
 `--defaults` takes the default of the rest. Then, in the project:
 
 ```sh
@@ -33,6 +33,12 @@ Some files are **seeded**: rendered once, then the project's own, which an updat
 `README.md`, `AGENTS.md`, `package.json`, the starter `src/` and `tests/`, and the Vitest,
 Playwright, Vite and Astro configs. Every other file is **managed**: an update carries the
 template's changes into it, and keeps the project's own changes to it.
+
+An existing repository moves onto the template the same way, rendered into its own checkout, with
+`--data starter=false`: it has its own `src/` and `tests/`, and a seeded file is skipped only where
+it exists, so with the starter files every update would add back the ones it has no place for.
+A library without a docs app can then still have browser tests of its own pages, such as
+playgrounds: its seeded Playwright config is the project's to point at them.
 
 ## Update a project
 
@@ -113,8 +119,9 @@ The Copier template is in five places:
 It takes no `_tasks`, `_migrations` or Jinja extensions: hosted Renovate runs `copier update` without
 `--trust`, which would refuse them.
 
-The Template workflow renders each case in [`tests/template/cases`](tests/template/cases) and checks
-it as its own CI would: actionlint on its workflows, then, set up by the setup action, `format:check`,
+The Template workflow renders each case in [`tests/template/cases`](tests/template/cases), into a
+copy of the folder of the same name when there is one (the repository a retrofit moves onto the
+template), and checks it as its own CI would: actionlint on its workflows, then, set up by the setup action, `format:check`,
 `lint` (failing when it changed a file), `type-check`, `test` and `build`, and the browser tests.
 actionlint cannot read a workflow called at `@v1`, so
 [`tests/template/check-callers.py`](tests/template/check-callers.py) checks each call against the
@@ -133,4 +140,20 @@ project in it.
 
 Third-party actions are pinned by commit SHA with the version in a comment.
 
-Releasing: tag the squash commit `vX.Y.Z` and move `vX` to it.
+## Releasing
+
+Tag the squash commit with an annotated tag, push it, and move the floating major tag to the same
+commit as a lightweight tag:
+
+```sh
+git tag -a vX.Y.Z -m vX.Y.Z <commit>
+git tag -f vX <commit>
+git push origin vX.Y.Z
+git push --force origin vX
+```
+
+Copier records the version a project came from as `_commit` in `.copier-answers.yml`, from
+`git describe --tags`, which prefers an annotated tag to a lightweight one. With every tag
+lightweight, it records the floating `vX`, which names a different commit at each release: the next
+`copier update` then sees no change to carry, or refuses it as a downgrade. So release tags are
+always annotated, and `vX` stays lightweight.

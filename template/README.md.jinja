@@ -28,12 +28,14 @@ Describe here how to use it.
 ```sh
 pnpm add {{ package_name }}
 ```
+{%- if starter %}
 
 ```ts
 import { greeting } from '{{ package_name }}'
 
 greeting('world') // 'Hello, world'
 ```
+{%- endif %}
 {%- elif pages %}
 It is live at {{ pages_url }}.
 {%- else %}
@@ -52,7 +54,7 @@ pnpm install
 {%- if web_dir %}{% set rows = rows + [['`pnpm dev`', 'Starts ' ~ ('the docs app' if kind == 'library' else 'the ' ~ kind) ~ ' on a local server']] %}{% endif %}
 {%- set rows = rows + [['`pnpm build`', 'Builds ' ~ ('the package into `dist/`' if kind == 'library' and not docs_dir else 'the package and the docs app' if kind == 'library' else 'the ' ~ kind ~ ' into `dist/`')]] %}
 {%- set rows = rows + [['`pnpm test`', 'Runs the unit tests']] %}
-{%- if browser_tests %}{% set rows = rows + [['`pnpm test:browser`', 'Builds ' ~ ('the docs app' if kind == 'library' else 'the ' ~ kind) ~ ' and tests it in a browser']] %}{% endif %}
+{%- if browser_tests %}{% set rows = rows + [['`pnpm test:browser`', 'Builds ' ~ ('the ' ~ kind ~ ' and tests it' if kind != 'library' else 'the docs app and tests it' if docs_dir else 'the project and tests its own pages') ~ ' in a browser']] %}{% endif %}
 {%- set rows = rows + [['`pnpm lint`', 'Checks the code' ~ (', the stylesheets' if design_system else '') ~ (' and the package as it is packed' if publish else '') ~ ', fixing what it can']] %}
 {%- set rows = rows + [['`pnpm type-check`', 'Type-checks everything'], ['`pnpm format`', 'Formats everything']] %}
 {%- if publish %}{% set rows = rows + [['`pnpm changeset`', 'Records a change to the package for the next release']] %}{% endif %}
