@@ -1,0 +1,17 @@
+# An existing library in a workspace moved onto the template, laid out as form-builder is: its
+# packages are not packages/<name>, and its docs app on GitHub Pages is VitePress, not the
+# template's Vite page. No seeded file of the template's layout, such as packages/<name>/package.json
+# or apps/docs/vite.config.ts, which VitePress would load. library-retrofit-docs/ is the
+# repository before the move.
+name: demo-docs
+description: A demo library moved onto the template, with VitePress docs
+visibility: public
+kind: library
+workspace: monorepo
+framework: vue
+design_system: false
+publish: true
+pages: true
+starter: false
+browser_tests: false
+agents_md: false

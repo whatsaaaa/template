@@ -35,10 +35,16 @@ Playwright, Vite and Astro configs. Every other file is **managed**: an update c
 template's changes into it, and keeps the project's own changes to it.
 
 An existing repository moves onto the template the same way, rendered into its own checkout, with
-`--data starter=false`: it has its own `src/` and `tests/`, and a seeded file is skipped only where
-it exists, so with the starter files every update would add back the ones it has no place for.
-A library without a docs app can then still have browser tests of its own pages, such as
-playgrounds: its seeded Playwright config is the project's to point at them.
+`--data starter=false`. It is laid out its own way, which the template cannot know, so it gets none
+of the seeded files that assume the template's layout: no `package.json`, no Vitest, Playwright,
+Vite or Astro config, no `index.html` and no starter `src/` and `tests/`. It has its own wherever
+its layout needs them. A seeded file is skipped only where it exists, so otherwise every update
+would add back the ones it has no place for, such as `packages/<name>/package.json` for a
+workspace whose packages have other names. Only `README.md`, `AGENTS.md` and
+`tests/playwright-version.test.ts` are still seeded. A managed file it has no place for it deletes
+once: an update does not add back a managed file the project deleted. A library without a docs
+app can then still have browser tests of its own pages, such as playgrounds, with its own
+Playwright config.
 
 ## Update a project
 
@@ -121,7 +127,7 @@ It takes no `_tasks`, `_migrations` or Jinja extensions: hosted Renovate runs `c
 
 The Template workflow renders each case in [`tests/template/cases`](tests/template/cases), into a
 copy of the folder of the same name when there is one (the repository a retrofit moves onto the
-template), and checks it as its own CI would: actionlint on its workflows, then, set up by the setup action, `format:check`,
+template, its `package.json` files on the versions of the catalog), and checks it as its own CI would: actionlint on its workflows, then, set up by the setup action, `format:check`,
 `lint` (failing when it changed a file), `type-check`, `test` and `build`, and the browser tests.
 actionlint cannot read a workflow called at `@v1`, so
 [`tests/template/check-callers.py`](tests/template/check-callers.py) checks each call against the

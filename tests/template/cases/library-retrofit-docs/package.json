@@ -1,0 +1,39 @@
+{
+  "name": "demo-docs-workspace",
+  "private": true,
+  "description": "A demo library moved onto the template, with VitePress docs",
+  "license": "MIT",
+  "author": "Whatsaaaa",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "pnpm --filter docs dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "type-check": "tsc && pnpm -r type-check",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "changeset": "changeset"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^22.20.5",
+    "@whatsaaaa/eslint-config": "^1.0.0",
+    "@whatsaaaa/format-config": "^1.0.0",
+    "@whatsaaaa/oxlint-config": "^1.0.0",
+    "@whatsaaaa/tsconfig": "^1.0.0",
+    "eslint": "^10.15.0",
+    "jiti": "^2.7.0",
+    "npm-run-all2": "^9.0.4",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "typescript": "~6.0.3"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "packageManager": "pnpm@12.21.0"
+}

@@ -32,6 +32,7 @@ jobs:
           - plain-site
           - react-library
           - library-retrofit
+          - library-retrofit-docs
           - base
     env:
       CASE: ${{ matrix.case }}
