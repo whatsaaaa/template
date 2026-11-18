@@ -35,8 +35,8 @@ run_case() {
   echo "ok   $case"
 }
 
-# Recorded from GitHub: a repository with a ruleset, environments and Pages,
-# one with a settings override, a private one, and a new one with neither a
+# Recorded from GitHub: a repository with a ruleset, environments and Pages
+# whose required checks come from its override, one with a settings override, a private one, and a new one with neither a
 # ruleset nor the environment it needs.
 run_case form-builder-check form-builder whatsaaaa/form-builder --check
 run_case form-builder-apply form-builder whatsaaaa/form-builder
@@ -54,9 +54,11 @@ run_case demo-apply demo whatsaaaa/demo
 run_case demo-set demo whatsaaaa/demo --check --set publish=false --set 'description="Other"'
 run_case demo-answers-file demo whatsaaaa/demo --check --answers "$here/fixtures/answers.yml"
 
-# Quoted answers wrapped over several lines must read whole and match.
+# Answers wrapped over several lines must read whole: quoted ones match, and a
+# plain one shows whole in its drift.
 run_case demo-answers-folded demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded.yml"
 run_case demo-answers-folded-double demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded-double.yml"
+run_case demo-answers-folded-plain demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded-plain.yml"
 
 # The same repository drifted in the areas the recordings leave in line:
 # security toggles, Pages, an environment, branch policies and labels.

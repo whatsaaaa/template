@@ -45,7 +45,7 @@ The script reads the repository's `.copier-answers.yml` through the contents API
 | `--answers <file>` | answers from a YAML file, merged over the repository's |
 | `--set <key>=<value>` | one answer, repeatable; the value is YAML (`--set publish=false`) |
 
-The answers it reads are `description`, `publish`, `pages`, `stack` and `browser_tests`. `required_checks` (a list of check names) is a settings-only answer for repositories whose CI does not call the shared workflows yet; it replaces the derived check names.
+The answers it reads are `description`, `publish`, `pages`, `stack` and `browser_tests`. `required_checks` (a list of check names) is a settings-only answer for repositories whose CI does not call the shared workflows yet; it replaces the derived check names. A rendered repository whose CI runs more checks than the defaults lists them in its override instead.
 
 ## Overrides
 
@@ -54,9 +54,10 @@ The answers it reads are `description`, `publish`, `pages`, `stack` and `browser
 | Repository | Override | Why |
 | --- | --- | --- |
 | dotfiles | `pull_request_creation_policy: collaborators_only` | its README says it does not take pull requests |
+| form-builder | `required_checks`: `ci / check` and its own jobs | its CI runs coverage, docs, packages, minimum-version and consumer jobs beyond the shared defaults |
 | whatsaaaa | `has_issues: false` | the profile repository has no issues |
 
-The desired state has the keys `repository` (the `PATCH /repos` body), `topics`, `actions`, `security`, `rulesets`, `environments`, `pages` and `labels`; a `null` value in an override stops the script managing that key.
+The desired state has the keys `repository` (the `PATCH /repos` body), `topics`, `actions`, `security`, `rulesets`, `environments`, `pages` and `labels`; a `null` value in an override stops the script managing that key. An override's top-level `required_checks` (a list of check names) is not merged: like the answer of that name, which it takes precedence over, it replaces the derived check names in the `main` ruleset.
 
 ## Tests
 

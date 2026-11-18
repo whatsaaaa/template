@@ -1,0 +1,8 @@
+# A plain answer wrapped over several lines, as Copier writes long ones, with
+# an empty line in it and after it.
+description: A library
+    that is small,
+
+    on three lines
+
+publish: true

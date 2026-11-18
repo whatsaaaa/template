@@ -1,4 +1,4 @@
-whatsaaaa/form-builder (public, answers: settings/answers/form-builder.yml)
+whatsaaaa/form-builder (public, answers: .copier-answers.yml)
   fix    repository.homepage: "" -> "https://whatsaaaa.github.io/form-builder/"
   fix    repository.allow_merge_commit: true -> false
   fix    repository.allow_rebase_merge: true -> false
