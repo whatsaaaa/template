@@ -1,6 +1,7 @@
 whatsaaaa/dotfiles (public, answers: settings/answers/dotfiles.yml)
-  fix    repository.allow_squash_merge: true -> false
+  fix    repository.allow_merge_commit: true -> false
   fix    repository.allow_rebase_merge: true -> false
+  fix    repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   fix    repository.delete_branch_on_merge: false -> true
   fix    repository.allow_update_branch: false -> true
   ok     actions
@@ -8,9 +9,9 @@ whatsaaaa/dotfiles (public, answers: settings/answers/dotfiles.yml)
   fix    security.private_vulnerability_reporting: false -> true
   fix    rulesets.main: absent -> present
   ok     labels
-  7 fixed
+  8 fixed
 exit 0
-PATCH repos/whatsaaaa/dotfiles {"allow_squash_merge":false,"allow_rebase_merge":false,"delete_branch_on_merge":true,"allow_update_branch":true}
+PATCH repos/whatsaaaa/dotfiles {"allow_merge_commit":false,"allow_rebase_merge":false,"squash_merge_commit_title":"PR_TITLE","delete_branch_on_merge":true,"allow_update_branch":true}
 PUT repos/whatsaaaa/dotfiles/vulnerability-alerts null
 PUT repos/whatsaaaa/dotfiles/private-vulnerability-reporting null
-POST repos/whatsaaaa/dotfiles/rulesets {"name":"main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"bypass_actors":[],"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_signatures"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["merge"]}}]}
+POST repos/whatsaaaa/dotfiles/rulesets {"name":"main","target":"branch","enforcement":"active","conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},"bypass_actors":[],"rules":[{"type":"deletion"},{"type":"non_fast_forward"},{"type":"required_signatures"},{"type":"pull_request","parameters":{"required_approving_review_count":0,"dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,"require_last_push_approval":false,"required_review_thread_resolution":false,"allowed_merge_methods":["squash"]}}]}

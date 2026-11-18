@@ -1,11 +1,12 @@
 whatsaaaa/ui-vue (private, answers: settings/answers/ui-vue.yml)
-  drift  repository.allow_squash_merge: true -> false
+  drift  repository.allow_merge_commit: true -> false
   drift  repository.allow_rebase_merge: true -> false
+  drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   drift  repository.delete_branch_on_merge: false -> true
   drift  repository.allow_update_branch: false -> true
   drift  actions.can_approve_pull_request_reviews: true -> false
   skip   security: private repository
   skip   rulesets: not enforced on private repositories on GitHub Free
   ok     labels
-  5 drifted
+  6 drifted
 exit 1

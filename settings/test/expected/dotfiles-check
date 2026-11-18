@@ -1,6 +1,7 @@
 whatsaaaa/dotfiles (public, answers: settings/answers/dotfiles.yml)
-  drift  repository.allow_squash_merge: true -> false
+  drift  repository.allow_merge_commit: true -> false
   drift  repository.allow_rebase_merge: true -> false
+  drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   drift  repository.delete_branch_on_merge: false -> true
   drift  repository.allow_update_branch: false -> true
   ok     actions
@@ -8,5 +9,5 @@ whatsaaaa/dotfiles (public, answers: settings/answers/dotfiles.yml)
   drift  security.private_vulnerability_reporting: false -> true
   drift  rulesets.main: absent -> present
   ok     labels
-  7 drifted
+  8 drifted
 exit 1

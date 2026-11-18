@@ -1,6 +1,6 @@
 whatsaaaa/demo (public, answers: .copier-answers.yml)
   fix    repository.homepage: "" -> "https://whatsaaaa.github.io/demo/"
-  fix    repository.allow_squash_merge: true -> false
+  fix    repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   ok     actions
   fix    security.secret_scanning_push_protection: "disabled" -> "enabled"
   fix    security.vulnerability_alerts: false -> true
@@ -14,7 +14,7 @@ whatsaaaa/demo (public, answers: .copier-answers.yml)
   note   labels: left alone: release
   10 fixed
 exit 0
-PATCH repos/whatsaaaa/demo {"homepage":"https://whatsaaaa.github.io/demo/","allow_squash_merge":false}
+PATCH repos/whatsaaaa/demo {"homepage":"https://whatsaaaa.github.io/demo/","squash_merge_commit_title":"PR_TITLE"}
 PATCH repos/whatsaaaa/demo {"security_and_analysis":{"secret_scanning_push_protection":{"status":"enabled"}}}
 PUT repos/whatsaaaa/demo/vulnerability-alerts null
 POST repos/whatsaaaa/demo/pages {"build_type":"workflow"}

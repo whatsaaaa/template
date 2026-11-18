@@ -282,9 +282,11 @@ desired=$(jq -n \
         has_wiki: false,
         has_projects: false,
         has_discussions: false,
-        allow_merge_commit: true,
-        allow_squash_merge: false,
+        allow_merge_commit: false,
+        allow_squash_merge: true,
         allow_rebase_merge: false,
+        squash_merge_commit_title: "PR_TITLE",
+        squash_merge_commit_message: "COMMIT_MESSAGES",
         delete_branch_on_merge: true,
         allow_update_branch: true,
         allow_auto_merge: false

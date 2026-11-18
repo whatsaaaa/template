@@ -24,10 +24,10 @@ gh repo list whatsaaaa --limit 100 --json nameWithOwner --jq '.[].nameWithOwner'
 | --- | --- | --- |
 | Metadata | `description` from the answers | `homepage`: the Pages URL when `pages` |
 | Features | issues on; wiki, projects and discussions off | |
-| Merging | merge commits only; delete branch on merge on, update branch on, auto-merge off | |
+| Merging | squash merges only, titled with the pull request title and carrying the commit messages; delete branch on merge on, update branch on, auto-merge off | |
 | Actions | default `GITHUB_TOKEN` read-only | Actions may create and approve pull requests when `publish` (changesets opens the Version Packages pull request) |
 | Security | public repositories: secret scanning, push protection, Dependabot alerts and private vulnerability reporting on | |
-| Rulesets | public repositories: `main` from [`rulesets/main.json`](rulesets/main.json): no deletion, no force-push, signed commits, pull requests with 0 approvals and merge commits only, no bypass | required status checks: `ci / check` when `stack` is `typescript`, plus `ci / browser` with `browser_tests` |
+| Rulesets | public repositories: `main` from [`rulesets/main.json`](rulesets/main.json): no deletion, no force-push, signed commits, pull requests with 0 approvals and squash merges only, no bypass | required status checks: `ci / check` when `stack` is `typescript`, plus `ci / browser` with `browser_tests` |
 | Pages | | `build_type: workflow` when `pages` |
 | Environments | | `npm` ([`environments/npm.json`](environments/npm.json): reviewer `whatsaaaa`, deployments from `main`) when `publish`; `github-pages` (deployments from `main`) when `pages` |
 | Labels | the ten in [`labels.json`](labels.json); labels a repository adds itself are left alone | |

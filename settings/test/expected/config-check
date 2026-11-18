@@ -1,8 +1,9 @@
 whatsaaaa/config (public, answers: settings/answers/config.yml)
   drift  repository.has_wiki: true -> false
   drift  repository.has_projects: true -> false
-  drift  repository.allow_squash_merge: true -> false
+  drift  repository.allow_merge_commit: true -> false
   drift  repository.allow_rebase_merge: true -> false
+  drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   drift  repository.delete_branch_on_merge: false -> true
   drift  repository.allow_update_branch: false -> true
   drift  actions.can_approve_pull_request_reviews: false -> true
@@ -11,5 +12,5 @@ whatsaaaa/config (public, answers: settings/answers/config.yml)
   drift  rulesets.main: absent -> present
   drift  environments.npm: absent -> present
   ok     labels
-  11 drifted
+  12 drifted
 exit 1
