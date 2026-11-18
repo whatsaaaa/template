@@ -31,6 +31,7 @@ jobs:
           - react-app-monorepo
           - plain-site
           - react-library
+          - library-retrofit
           - base
     env:
       CASE: ${{ matrix.case }}

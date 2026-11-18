@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Checks that `copier update`, run as Renovate runs it (no --trust), carries a template change
-# into a managed file while keeping the project's own edit to it, and leaves a seeded file alone.
+# into a managed file while keeping the project's own edit to it, and leaves a seeded file alone;
+# and that it never adds the starter files to an existing repository moved onto the template.
 # Usage: tests/template/update.sh
 set -euo pipefail
 
@@ -31,6 +32,14 @@ echo 'A line of the project.' >>"$work/project/README.md"
 git_quiet -C "$work/project" add -A
 git_quiet -C "$work/project" commit -m 'Start from the template'
 
+# An existing repository moved onto it, without the starter files (starter: no)
+retrofit=$root/tests/template/cases/library-retrofit
+cp -R "$retrofit" "$work/retrofit"
+copier copy --defaults --quiet --data-file "$retrofit.yml" "$work/template" "$work/retrofit"
+git_quiet -C "$work/retrofit" init
+git_quiet -C "$work/retrofit" add -A
+git_quiet -C "$work/retrofit" commit -m 'Move onto the template'
+
 # v100.0.1 changes the same two files, and a seeded file the project kept as it was
 echo '# A template change' >>"$work/template/template/.gitignore.jinja"
 echo 'A line of the template.' >>"$work/template/template/README.md.jinja"
@@ -39,6 +48,7 @@ git_quiet -C "$work/template" commit -am v100.0.1
 git_quiet -C "$work/template" tag v100.0.1
 
 (cd "$work/project" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
+(cd "$work/retrofit" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 
 project=$work/project
 grep -qx '_commit: v100.0.1' "$project/.copier-answers.yml" || fail '.copier-answers.yml does not record v100.0.1'
@@ -49,4 +59,13 @@ grep -qx 'A line of the project.' "$project/README.md" || fail "the project's ed
 ! grep -qx '// A template change' "$project/src/index.ts" || fail 'the update changed src/index.ts, a seeded file'
 [[ -z $(find "$project" -name '*.rej' -print -quit) ]] || fail 'the update left a rejected hunk'
 ! grep -rq '^<<<<<<<' "$project" --exclude-dir=.git || fail 'the update left a conflict'
-echo 'copier update: managed file updated, project edits kept, seeded files left alone'
+
+member=$work/retrofit/packages/demo-retrofit
+grep -qx '_commit: v100.0.1' "$work/retrofit/.copier-answers.yml" || fail "the retrofit's .copier-answers.yml does not record v100.0.1"
+grep -qx '# A template change' "$work/retrofit/.gitignore" || fail "the template change did not reach the retrofit's .gitignore"
+diff -r "$retrofit/packages/demo-retrofit/src" "$member/src" >&2 || fail "the update changed the retrofit's own src/"
+[[ ! -e $member/tests ]] || fail 'the update added the starter unit test to the retrofit'
+[[ ! -e $work/retrofit/tests/browser/home.spec.ts ]] || fail 'the update added the starter browser test to the retrofit'
+[[ -z $(git -C "$work/retrofit" status --porcelain --untracked-files=all -- packages tests) ]] ||
+  fail "the update changed the retrofit's packages/ or tests/"
+echo 'copier update: managed file updated, project edits kept, seeded files left alone, no starter files in a retrofit'

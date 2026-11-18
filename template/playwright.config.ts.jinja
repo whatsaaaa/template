@@ -1,7 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
+{%- if web_dir %}
  * Browser tests of the built {{ 'docs app' if kind == 'library' else kind }}, which "pnpm test:browser" builds first.
+{%- else %}
+ * Browser tests of the project's own pages, such as its playgrounds, which "pnpm test:browser"
+ * builds first. A webServer here serves them, and use.baseURL points at it.
+{%- endif %}
  */
 export default defineConfig({
   testDir: 'tests/browser',
@@ -10,9 +15,12 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     ...devices['Desktop Chrome'],
+{%- if web_dir %}
     baseURL: 'http://127.0.0.1:4173{{ base_path }}',
+{%- endif %}
     colorScheme: 'dark',
   },
+{%- if web_dir %}
   webServer: {
 {%- if ui == 'astro' %}
     // --ignore-lock keeps the server in the foreground, where Playwright stops it: Astro starts it
@@ -28,4 +36,5 @@ export default defineConfig({
     url: 'http://127.0.0.1:4173{{ base_path }}',
     reuseExistingServer: !process.env.CI,
   },
+{%- endif %}
 })
