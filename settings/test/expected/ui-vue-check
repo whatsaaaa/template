@@ -1,4 +1,4 @@
-whatsaaaa/ui-vue (private, answers: settings/answers/ui-vue.yml)
+whatsaaaa/ui-vue (private, answers: .copier-answers.yml)
   drift  repository.allow_merge_commit: true -> false
   drift  repository.allow_rebase_merge: true -> false
   drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"

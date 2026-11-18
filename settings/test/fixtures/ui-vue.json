@@ -1,7 +1,7 @@
 {
   "GET repos/whatsaaaa/ui-vue/contents/.copier-answers.yml": {
-    "status": 404,
-    "body": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/contents#get-repository-content\",\"status\":\"404\"}"
+    "status": 200,
+    "body": "# Written by Copier: never edit this file by hand. `copier update` reads it.\n_commit: v1.3.0\n_src_path: https://github.com/whatsaaaa/template.git\nagents_md: false\nbrand_kit: whatsaaaa\nbrowser_tests: true\ncopyright_year: 2026\ndescription: Nuxt UI themed with the Whatsaaaa design system, for Vue and Nuxt\ndesign_system: true\nframework: vue\nkind: library\nlicense: MIT\nname: ui-vue\npages: false\npublish: false\nstack: typescript\nstarter: false\nvisibility: public\nworkspace: monorepo\n"
   },
   "GET repos/whatsaaaa/ui-vue": {
     "status": 200,
