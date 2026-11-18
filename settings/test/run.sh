@@ -54,6 +54,10 @@ run_case demo-apply demo whatsaaaa/demo
 run_case demo-set demo whatsaaaa/demo --check --set publish=false --set 'description="Other"'
 run_case demo-answers-file demo whatsaaaa/demo --check --answers "$here/fixtures/answers.yml"
 
+# Quoted answers wrapped over several lines must read whole and match.
+run_case demo-answers-folded demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded.yml"
+run_case demo-answers-folded-double demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded-double.yml"
+
 # The same repository drifted in the areas the recordings leave in line:
 # security toggles, Pages, an environment, branch policies and labels.
 run_case demo-drifted-check demo-drifted whatsaaaa/demo --check

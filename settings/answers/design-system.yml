@@ -1,8 +1,0 @@
-# Answers for a repository without .copier-answers.yml yet, in the same
-# format. Delete this file once the repository is rendered from the template.
-description: "Whatsaaaa's design system: brand identity, design tokens, typography, docs theme and asset kit"
-stack: typescript
-kind: library
-publish: true
-pages: false
-browser_tests: true
