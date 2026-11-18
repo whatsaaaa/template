@@ -6,7 +6,3 @@ kind: library
 publish: true
 pages: false
 browser_tests: true
-# Settings only: the job names of today's ci.yml, until it calls the shared workflows.
-required_checks:
-  - check
-  - browser
