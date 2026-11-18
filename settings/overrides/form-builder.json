@@ -1,0 +1,14 @@
+{
+  "required_checks": [
+    "ci / check",
+    "coverage",
+    "docs",
+    "packages",
+    "valibot-min",
+    "react-18",
+    "adapters-min (react)",
+    "adapters-min (vue)",
+    "node-22",
+    "consumer-smoke-min"
+  ]
+}

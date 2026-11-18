@@ -1,7 +1,7 @@
 {
   "GET repos/whatsaaaa/form-builder/contents/.copier-answers.yml": {
-    "status": 404,
-    "body": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/contents#get-repository-content\",\"status\":\"404\"}"
+    "status": 200,
+    "body": "# Written by Copier: never edit this file by hand. `copier update` reads it.\n_commit: v1.3.1\n_src_path: https://github.com/whatsaaaa/template.git\nagents_md: false\nbrand_kit: form-builder\nbrowser_tests: false\ncopyright_year: 2026\ndescription: Define Formisch forms in JSON, render them with your own components,\n    or compile them to typed Valibot code.\ndesign_system: false\nframework: vue\nkind: library\nlicense: MIT\nname: form-builder\npages: true\npublish: true\nstack: typescript\nstarter: false\nvisibility: public\nworkspace: monorepo\n"
   },
   "GET repos/whatsaaaa/form-builder": {
     "status": 200,

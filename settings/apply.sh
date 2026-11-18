@@ -145,8 +145,8 @@ diff_json() {
 
 # yaml_to_json: the flat subset of YAML that Copier writes to
 # .copier-answers.yml (scalars and lists of scalars at the top level) as one
-# JSON object. A quoted scalar may run over several lines, as Copier wraps
-# long ones. Nested mappings are skipped; the script reads none.
+# JSON object. A scalar, quoted or plain, may run over several lines, as Copier
+# wraps long ones. Nested mappings are skipped; the script reads none.
 yaml_to_json() {
   awk '
     function esc(s) {
@@ -211,6 +211,12 @@ yaml_to_json() {
       for (i = 1; i <= n; i++) out = out (i > 1 ? "," : "") scalar(parts[i])
       return "[" out "]"
     }
+    # end_plain(): the multi-line plain scalar on buf, now that a line that
+    # does not continue it has come.
+    function end_plain() {
+      print "[" esc(plain) "," scalar(buf) "]"
+      plain = ""
+    }
     function flush() {
       if (key == "") return
       if (mode == "list") print "[" esc(key) ",[" items "]]"
@@ -222,6 +228,17 @@ yaml_to_json() {
       if (!open(buf)) { print "[" esc(pending) "," scalar(buf) "]"; pending = "" }
       next
     }
+    # A plain scalar continues on each more indented line until a comment;
+    # line breaks fold as in a quoted one.
+    plain != "" {
+      if ($0 ~ /^[ \t]*$/) { blanks++; next }
+      if ($0 ~ /^[ \t]+[^ \t#]/ && buf !~ /[ \t]#/) {
+        for (; blanks > 0; blanks--) buf = buf "\n"
+        buf = buf (substr(buf, length(buf)) == "\n" ? "" : " ") trim($0)
+        next
+      }
+      end_plain()
+    }
     /^[ \t]*(#.*)?$/ || /^---/ { next }
     /^[A-Za-z_][A-Za-z0-9_-]*:([ \t]|$)/ {
       flush()
@@ -230,7 +247,8 @@ yaml_to_json() {
       if (v == "") { key = k; mode = "empty"; items = ""; next }
       if (v ~ /^["\047]/ && open(v)) { pending = k; buf = ""; joiner = ""; fold(v); next }
       if (v ~ /^\[.*\]$/) print "[" esc(k) "," flow(v) "]"
-      else print "[" esc(k) "," scalar(v) "]"
+      else if (v ~ /^["\047]/) print "[" esc(k) "," scalar(v) "]"
+      else { plain = k; buf = v; blanks = 0 }
       next
     }
     /^[ \t]*- / {
@@ -241,7 +259,7 @@ yaml_to_json() {
       next
     }
     { if (key != "" && mode == "empty") mode = "nested" }
-    END { flush() }
+    END { if (plain != "") end_plain(); flush() }
   ' | jq -s 'map({(.[0]): .[1]}) | add // {}'
 }
 
@@ -282,6 +300,8 @@ else
   pages_url="https://${repo%%/*}.github.io/$name/"
 fi
 
+# An override's required_checks, like the answer, replaces the derived check
+# names; the rest of it is merged over the desired state.
 overrides='{}'
 if [[ -f $SETTINGS_DIR/overrides/$name.json ]]; then
   overrides=$(jq . "$SETTINGS_DIR/overrides/$name.json")
@@ -301,7 +321,7 @@ desired=$(jq -n \
   --slurpfile gh_pages_branches "$SETTINGS_DIR/environments/github-pages.branch-policies.json" '
   ($a.publish == true) as $publish
   | ($a.pages == true) as $pages
-  | ($a.required_checks // (
+  | ($overrides.required_checks // $a.required_checks // (
       if ($a.stack // "") == "typescript" then
         ["ci / check"] + (if $a.browser_tests == true then ["ci / browser"] else [] end)
       else [] end)) as $checks
@@ -348,7 +368,7 @@ desired=$(jq -n \
       pages: (if $pages then {build_type: "workflow"} else null end),
       labels: $labels[0]
     }
-  | . * $overrides
+  | . * ($overrides | del(.required_checks))
   | walk(if type == "object" then with_entries(select(.value != null)) else . end)
 ')
 
