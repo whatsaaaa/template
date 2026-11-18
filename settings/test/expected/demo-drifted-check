@@ -1,6 +1,6 @@
 whatsaaaa/demo (public, answers: .copier-answers.yml)
   drift  repository.homepage: "" -> "https://whatsaaaa.github.io/demo/"
-  drift  repository.allow_squash_merge: true -> false
+  drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   ok     actions
   drift  security.secret_scanning_push_protection: "disabled" -> "enabled"
   drift  security.vulnerability_alerts: false -> true

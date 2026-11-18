@@ -24,7 +24,8 @@ jq --arg repo "GET repos/$1" '
     if .key == $repo then
       .value.body |= {name, full_name, visibility, description, homepage, topics,
         has_issues, has_wiki, has_projects, has_discussions, allow_merge_commit,
-        allow_squash_merge, allow_rebase_merge, delete_branch_on_merge,
+        allow_squash_merge, allow_rebase_merge, squash_merge_commit_title,
+        squash_merge_commit_message, delete_branch_on_merge,
         allow_update_branch, allow_auto_merge, pull_request_creation_policy,
         security_and_analysis}
     elif (.key | test("/labels[?]")) then

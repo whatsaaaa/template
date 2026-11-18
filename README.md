@@ -133,4 +133,4 @@ project in it.
 
 Third-party actions are pinned by commit SHA with the version in a comment.
 
-Releasing: tag the merge commit `vX.Y.Z` and move `vX` to it.
+Releasing: tag the squash commit `vX.Y.Z` and move `vX` to it.

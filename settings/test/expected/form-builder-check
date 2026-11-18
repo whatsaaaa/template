@@ -1,14 +1,15 @@
 whatsaaaa/form-builder (public, answers: settings/answers/form-builder.yml)
   drift  repository.homepage: "" -> "https://whatsaaaa.github.io/form-builder/"
-  drift  repository.allow_squash_merge: true -> false
+  drift  repository.allow_merge_commit: true -> false
   drift  repository.allow_rebase_merge: true -> false
+  drift  repository.squash_merge_commit_title: "COMMIT_OR_PR_TITLE" -> "PR_TITLE"
   drift  repository.delete_branch_on_merge: false -> true
   drift  repository.allow_update_branch: false -> true
   ok     actions
   drift  security.vulnerability_alerts: false -> true
   drift  security.private_vulnerability_reporting: false -> true
   drift  rulesets.main.bypass_actors: [{"actor_id":4229212,"actor_type":"Integration","bypass_mode":"always"},{"actor_id":4518051,"actor_type":"Integration","bypass_mode":"always"},{"actor_id":346270425,"actor_type":"User","bypass_mode":"always"}] -> []
-  drift  rulesets.main.rules.pull_request.allowed_merge_methods: ["merge","rebase","squash"] -> ["merge"]
+  drift  rulesets.main.rules.pull_request.allowed_merge_methods: ["merge","rebase","squash"] -> ["squash"]
   drift  rulesets.main.rules.required_status_checks: absent -> {"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":["adapters-min (react)","adapters-min (vue)","check","consumer-smoke-min","node-22","react-18","valibot-min"]}
   drift  rulesets.main.rules.creation: present -> absent
   drift  rulesets.main.rules.update: present -> absent
@@ -18,5 +19,5 @@ whatsaaaa/form-builder (public, answers: settings/answers/form-builder.yml)
   ok     environments.npm
   ok     environments.npm.branch_policies
   ok     labels
-  12 drifted
+  13 drifted
 exit 1

@@ -12,9 +12,11 @@
       "has_wiki": false,
       "has_projects": false,
       "has_discussions": false,
-      "allow_merge_commit": true,
+      "allow_merge_commit": false,
       "allow_squash_merge": true,
       "allow_rebase_merge": false,
+      "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+      "squash_merge_commit_message": "COMMIT_MESSAGES",
       "delete_branch_on_merge": true,
       "allow_update_branch": true,
       "allow_auto_merge": false,
@@ -98,7 +100,7 @@
             "require_last_push_approval": false,
             "required_review_thread_resolution": false,
             "allowed_merge_methods": [
-              "merge"
+              "squash"
             ],
             "required_reviewers": [],
             "require_extra_approval_for_unattributed_changes": true
