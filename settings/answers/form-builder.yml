@@ -6,9 +6,13 @@ kind: library
 workspace: monorepo
 publish: true
 pages: true
-# Settings only: the job names of today's ci.yml, until it calls the shared workflows.
+# Settings only: form-builder's CI job names, listed explicitly because its CI
+# runs jobs beyond the shared defaults.
 required_checks:
-  - check
+  - ci / check
+  - coverage
+  - docs
+  - packages
   - valibot-min
   - react-18
   - adapters-min (react)
