@@ -74,8 +74,17 @@ _exclude:
   - "{% if ui != 'astro' %}/{{ web }}src/pages/{% endif %}"
   - "{% if ui == 'astro' %}/{{ web }}vite.config.ts{% endif %}"
   - "{% if ui == 'astro' %}/{{ web }}index.html{% endif %}"
-  # starter: no, an existing repository brings its own src/ and tests/. Without these, every
-  # `copier update` would add back the starter files it has no place for.
+  # starter: no, an existing repository brings its own code and configs, laid out its own way: no
+  # seeded package.json, config, page or starter src/ and tests/, which assume the template's
+  # layout. A seeded file is rendered wherever it is missing, so without these every `copier
+  # update` would add back the ones it has no place for. The seeded README.md, AGENTS.md and
+  # tests/playwright-version.test.ts fit any layout and are still rendered.
+  - "{% if not starter %}package.json{% endif %}"
+  - "{% if not starter %}vitest.config.ts{% endif %}"
+  - "{% if not starter %}playwright.config.ts{% endif %}"
+  - "{% if not starter %}vite.config.ts{% endif %}"
+  - "{% if not starter %}astro.config.ts{% endif %}"
+  - "{% if not starter %}index.html{% endif %}"
   - "{% if not starter %}/{{ pkg }}src/{% endif %}"
   - "{% if not starter %}/{{ web }}src/{% endif %}"
   - "{% if not starter %}/{{ pkg }}tests/greeting.test.ts{% endif %}"
@@ -145,7 +154,8 @@ starter:
   type: bool
   help: >-
     Start with the starter src/ and tests/: a greeting, its unit test and a home page with its
-    browser test. No for an existing repository moving onto the template, which has its own
+    browser test. No for an existing repository moving onto the template, which has its own,
+    and its own package.json files and configs too
   when: "{{ stack == 'typescript' }}"
   default: true
 

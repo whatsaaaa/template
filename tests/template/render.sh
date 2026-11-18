@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Renders the template, as this checkout has it, with the answers of one case. A case with a
-# folder of its name renders into a copy of it: the existing repository moving onto the template.
+# folder of its name renders into a copy of it: the existing repository moving onto the template,
+# on the versions of the template's catalog.
 # Usage: tests/template/render.sh <case> <destination>
 set -euo pipefail
 
@@ -11,6 +12,7 @@ existing="$root/tests/template/cases/$1"
 if [[ -d $existing ]]; then
   mkdir -p "$2"
   cp -R "$existing/." "$2"
+  python3 "$root/tests/template/use-catalog.py" "$root/package.json" "$2"
 fi
 
 # --vcs-ref HEAD renders this checkout, uncommitted changes included, not the latest tag

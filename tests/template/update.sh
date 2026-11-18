@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Checks that `copier update`, run as Renovate runs it (no --trust), carries a template change
 # into a managed file while keeping the project's own edit to it, and leaves a seeded file alone;
-# and that it never adds the starter files to an existing repository moved onto the template.
+# and that it never adds the starter files to an existing repository moved onto the template, nor
+# a seeded file of the template's layout, such as packages/<name>/package.json, to one laid out
+# its own way, nor back a managed file it deleted.
 # Usage: tests/template/update.sh
 set -euo pipefail
 
@@ -40,6 +42,18 @@ git_quiet -C "$work/retrofit" init
 git_quiet -C "$work/retrofit" add -A
 git_quiet -C "$work/retrofit" commit -m 'Move onto the template'
 
+# One laid out as form-builder is, which deletes the managed files it has no place for
+docs=$root/tests/template/cases/library-retrofit-docs
+cp -R "$docs" "$work/docs"
+copier copy --defaults --quiet --data-file "$docs.yml" "$work/template" "$work/docs"
+for file in packages/demo-docs/package.json apps/docs/index.html apps/docs/vite.config.ts vitest.config.ts; do
+  [[ ! -e $work/docs/$file ]] || fail "the template rendered $file, a seeded file of its own layout, into the docs retrofit"
+done
+rm -r "$work/docs/packages/demo-docs"
+git_quiet -C "$work/docs" init
+git_quiet -C "$work/docs" add -A
+git_quiet -C "$work/docs" commit -m 'Move onto the template'
+
 # v100.0.1 changes the same two files, and a seeded file the project kept as it was
 echo '# A template change' >>"$work/template/template/.gitignore.jinja"
 echo 'A line of the template.' >>"$work/template/template/README.md.jinja"
@@ -49,6 +63,7 @@ git_quiet -C "$work/template" tag v100.0.1
 
 (cd "$work/project" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/retrofit" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
+(cd "$work/docs" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 
 project=$work/project
 grep -qx '_commit: v100.0.1' "$project/.copier-answers.yml" || fail '.copier-answers.yml does not record v100.0.1'
@@ -68,4 +83,13 @@ diff -r "$retrofit/packages/demo-retrofit/src" "$member/src" >&2 || fail "the up
 [[ ! -e $work/retrofit/tests/browser/home.spec.ts ]] || fail 'the update added the starter browser test to the retrofit'
 [[ -z $(git -C "$work/retrofit" status --porcelain --untracked-files=all -- packages tests) ]] ||
   fail "the update changed the retrofit's packages/ or tests/"
-echo 'copier update: managed file updated, project edits kept, seeded files left alone, no starter files in a retrofit'
+
+grep -qx '_commit: v100.0.1' "$work/docs/.copier-answers.yml" || fail "the docs retrofit's .copier-answers.yml does not record v100.0.1"
+grep -qx '# A template change' "$work/docs/.gitignore" || fail "the template change did not reach the docs retrofit's .gitignore"
+
+# In both retrofits, the update changes managed files and neither adds a file nor deletes one
+for repository in retrofit docs; do
+  files=$(git -C "$work/$repository" status --porcelain --untracked-files=all | grep -v '^ M ' || true)
+  [[ -z $files ]] || fail "the update added or deleted files in the $repository retrofit: $files"
+done
+echo 'copier update: managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'
