@@ -1,0 +1,14 @@
+whatsaaaa/demo (public, answers: .copier-answers.yml + answers-folded-double.yml)
+  ok     repository
+  ok     actions
+  ok     security
+  ok     rulesets.main
+  ok     pages
+  ok     environments.github-pages
+  ok     environments.github-pages.branch_policies
+  ok     environments.npm
+  ok     environments.npm.branch_policies
+  ok     labels
+  note   labels: left alone: release
+  0 drifted
+exit 0

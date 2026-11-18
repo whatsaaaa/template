@@ -1,0 +1,4 @@
+# A double-quoted answer wrapped over several lines, with an escaped line break.
+description: "Demo: a
+    lib\
+    rary that's small"

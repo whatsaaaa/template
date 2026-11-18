@@ -145,11 +145,12 @@ diff_json() {
 
 # yaml_to_json: the flat subset of YAML that Copier writes to
 # .copier-answers.yml (scalars and lists of scalars at the top level) as one
-# JSON object. Nested mappings are skipped; the script reads none.
+# JSON object. A quoted scalar may run over several lines, as Copier wraps
+# long ones. Nested mappings are skipped; the script reads none.
 yaml_to_json() {
   awk '
     function esc(s) {
-      gsub(/\\/, "\\\\", s); gsub(/"/, "\\\"", s); gsub(/\t/, "\\t", s)
+      gsub(/\\/, "\\\\", s); gsub(/"/, "\\\"", s); gsub(/\t/, "\\t", s); gsub(/\n/, "\\n", s)
       return "\"" s "\""
     }
     function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
@@ -167,6 +168,30 @@ yaml_to_json() {
         out = out c
       }
       return out
+    }
+    # open(s): whether the quoted scalar s has no closing quote yet.
+    function open(s,   q, i, c) {
+      q = substr(s, 1, 1)
+      for (i = 2; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (q == "\"" && c == "\\") { i++; continue }
+        if (c == q) {
+          if (q == "\047" && substr(s, i + 1, 1) == q) { i++; continue }
+          return 0
+        }
+      }
+      return 1
+    }
+    # fold(s): the next line of a multi-line quoted scalar onto buf. Line
+    # breaks fold to a space, an empty line to a newline, and an escaped line
+    # break in a double-quoted scalar to nothing.
+    function fold(s) {
+      s = trim(s)
+      if (s == "") { buf = buf "\n"; joiner = ""; return }
+      buf = buf joiner s; joiner = " "
+      if (substr(buf, 1, 1) == "\"" && buf ~ /[^\\](\\\\)*\\$/) {
+        buf = substr(buf, 1, length(buf) - 1); joiner = ""
+      }
     }
     function scalar(s) {
       s = trim(s)
@@ -192,12 +217,18 @@ yaml_to_json() {
       else if (mode == "empty") print "[" esc(key) ",null]"
       key = ""; mode = ""; items = ""
     }
+    pending != "" {
+      fold($0)
+      if (!open(buf)) { print "[" esc(pending) "," scalar(buf) "]"; pending = "" }
+      next
+    }
     /^[ \t]*(#.*)?$/ || /^---/ { next }
     /^[A-Za-z_][A-Za-z0-9_-]*:([ \t]|$)/ {
       flush()
       k = $0; sub(/:.*/, "", k)
       v = $0; sub(/^[^:]*:/, "", v); v = trim(v)
       if (v == "") { key = k; mode = "empty"; items = ""; next }
+      if (v ~ /^["\047]/ && open(v)) { pending = k; buf = ""; joiner = ""; fold(v); next }
       if (v ~ /^\[.*\]$/) print "[" esc(k) "," flow(v) "]"
       else print "[" esc(k) "," scalar(v) "]"
       next
