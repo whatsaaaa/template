@@ -54,8 +54,8 @@ _exclude:
   - "{% if not agents_md %}/CLAUDE.md{% endif %}"
   # ci, publish, pages, design_system, browser_tests. The test holding the version of Playwright
   # to the one ci.yml names has nothing to hold without CI.
-  - "{% if not ci %}/.github/workflows/ci.yml{% endif %}"
-  - "{% if not ci %}/tests/playwright-version.test.ts{% endif %}"
+  - "{% if not (ci | default(true)) %}/.github/workflows/ci.yml{% endif %}"
+  - "{% if not (ci | default(true)) %}/tests/playwright-version.test.ts{% endif %}"
   - "{% if not publish %}/.changeset/{% endif %}"
   - "{% if not publish %}/.github/workflows/release.yml{% endif %}"
   - "{% if not pages %}/.github/workflows/pages.yml{% endif %}"

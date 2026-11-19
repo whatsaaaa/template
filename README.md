@@ -137,7 +137,8 @@ actionlint cannot read a workflow called at `@v1`, so
 workflows of the checkout: the inputs it passes, the permissions it grants, and the CI workflow the
 release starts on the Version Packages pull request.
 [`tests/template/update.sh`](tests/template/update.sh) checks `copier update` with the oldest Copier
-`copier.yml` allows and the current one, and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
+`copier.yml` allows and the current one, from the last release too, whose tag a clone needs
+(`git fetch --tags`), and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
 checks a project without CI: no workflow and nothing naming one, and publishing or GitHub Pages
 refused. To try a case locally:
 
