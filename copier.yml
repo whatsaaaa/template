@@ -47,13 +47,14 @@ _exclude:
   - "{% if stack == 'base' %}/tests/{% endif %}"
   - "{% if stack == 'base' %}/packages/{% endif %}"
   - "{% if stack == 'base' %}/apps/{% endif %}"
-  - "{% if stack == 'typescript' %}/.no-mistakes.yaml{% endif %}"
   # license and agents_md
   - "{% if license == 'none' %}/LICENSE{% endif %}"
   - "{% if not agents_md %}/AGENTS.md{% endif %}"
   - "{% if not agents_md %}/CLAUDE.md{% endif %}"
-  # ci, publish, pages, design_system, browser_tests. The test holding the version of Playwright
-  # to the one ci.yml names has nothing to hold without CI.
+  # ci, publish, pages, design_system, browser_tests. A project without CI, base ones too, tells
+  # no-mistakes so in .no-mistakes.yaml. The test holding the version of Playwright to the one
+  # ci.yml names has nothing to hold without CI.
+  - "{% if stack == 'typescript' and (ci | default(true)) %}/.no-mistakes.yaml{% endif %}"
   - "{% if not (ci | default(true)) %}/.github/workflows/ci.yml{% endif %}"
   - "{% if not (ci | default(true)) %}/tests/playwright-version.test.ts{% endif %}"
   - "{% if not publish %}/.changeset/{% endif %}"
