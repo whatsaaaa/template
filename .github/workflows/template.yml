@@ -131,7 +131,8 @@ jobs:
           echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
       - run: tests/template/update.sh
 
-  # A project without CI: no workflow and nothing naming one, and the answers that need CI refused
+  # A project without CI: no workflow and nothing naming one, and the answers that need CI neither
+  # asked nor taken
   no-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 10

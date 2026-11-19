@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks a project without CI (ci: no): it gets no workflow and nothing that names one, and without
-# CI publishing to npm and deploying to GitHub Pages, which both run on it, default to no and Copier
-# refuses them.
+# CI publishing to npm and deploying to GitHub Pages, which both run on it, are not asked, default
+# to no and Copier refuses them.
 # Usage: tests/template/no-ci.sh
 set -euo pipefail
 
@@ -20,7 +20,28 @@ for kind in library site; do
     --data visibility=public --data ci=false --data kind=$kind "$root" "$work/$kind" ||
     fail "Copier refused the defaults of a public $kind without CI"
 done
-for project in "$work/project" "$work/browser" "$work/library" "$work/site"; do
+# A person answering yes to every question Copier asks, all but publish and pages answered up front:
+# Copier does not validate a yes typed in, so it must not ask them without CI. With CI the same yes
+# deploys the site, so the answers do reach the questions.
+interactive() { # <destination> <copier --data>...
+  local destination=$1
+  shift
+  python3 "$root/tests/template/answer-yes.py" copier copy --vcs-ref HEAD --quiet --data name=demo \
+    --data description=Demo --data visibility=public --data stack=typescript --data starter=true \
+    --data design_system=true --data browser_tests=false --data brand_kit=whatsaaaa \
+    --data license=none --data agents_md=true "$@" "$root" "$destination" >"$work/interactive.log" ||
+    fail "Copier failed with $*: $(cat "$work/interactive.log")"
+}
+interactive "$work/yes-library" --data kind=library --data workspace=monorepo --data framework=none \
+  --data ci=false
+interactive "$work/yes-site" --data kind=site --data workspace=single --data framework=astro \
+  --data ci=false
+interactive "$work/yes-site-ci" --data kind=site --data workspace=single --data framework=astro \
+  --data ci=true
+[[ -f $work/yes-site-ci/.github/workflows/pages.yml ]] ||
+  fail 'a yes to every question did not deploy a site with CI to GitHub Pages'
+for project in "$work/project" "$work/browser" "$work/library" "$work/site" "$work/yes-library" \
+  "$work/yes-site"; do
   [[ -z $(find "$project/.github" -name '*.yml' -print -quit) ]] ||
     fail "a project without CI got a workflow: $(find "$project/.github" -name '*.yml')"
   ! grep -rqi 'ci\.yml\|CI runs\|^- `\.github/workflows/`' "$project" --exclude-dir=.git ||
@@ -46,4 +67,4 @@ refused 'deploying to GitHub Pages needs CI' --data kind=site --data pages=true
 refused 'deploying to GitHub Pages needs CI' --data kind=library --data workspace=monorepo \
   --data publish=false --data pages=true
 
-echo 'ci: no: no workflow and nothing naming one, publishing and Pages off by default and refused'
+echo 'ci: no: no workflow and nothing naming one, publishing and Pages not asked and refused'

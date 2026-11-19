@@ -21,8 +21,8 @@ Vue, React, Astro), the design system, browser tests and GitHub Pages; then the 
 brand kit, the license and `AGENTS.md`. `--data key=value` or `--data-file answers.yml` answers them up front, and
 `--defaults` takes the default of the rest. A repository that only keeps code, never published to
 npm nor deployed, answers no to CI: it gets no workflow, and its settings require no status checks.
-Publishing to npm and GitHub Pages run on CI, so without it they default to no and Copier
-refuses them. Then, in the project:
+Publishing to npm and GitHub Pages run on CI, so without it Copier does not ask them and
+refuses a yes given up front. Then, in the project:
 
 ```sh
 pnpm install   # writes pnpm-lock.yaml, which CI installs from
@@ -140,7 +140,7 @@ release starts on the Version Packages pull request.
 `copier.yml` allows and the current one, from the last release too, whose tag a clone needs
 (`git fetch --tags`), and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
 checks a project without CI: no workflow and nothing naming one, and publishing or GitHub Pages
-refused. To try a case locally:
+neither asked nor taken. To try a case locally:
 
 ```sh
 tests/template/render.sh vue-app /tmp/vue-app   # renders this checkout, uncommitted changes too
