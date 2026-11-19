@@ -44,6 +44,7 @@ for project in "$work/project" "$work/browser" "$work/library" "$work/site" "$wo
   "$work/yes-site"; do
   [[ -z $(find "$project/.github" -name '*.yml' -print -quit) ]] ||
     fail "a project without CI got a workflow: $(find "$project/.github" -name '*.yml')"
+  # shellcheck disable=SC2016 # Markdown backticks, not a command
   ! grep -rqi 'ci\.yml\|CI runs\|^- `\.github/workflows/`' "$project" --exclude-dir=.git ||
     fail "a project without CI names it: $(grep -rli 'ci\.yml\|CI runs' "$project" --exclude-dir=.git)"
 done
