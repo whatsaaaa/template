@@ -16,10 +16,14 @@ copier copy --vcs-ref vX.Y.Z https://github.com/whatsaaaa/template.git my-projec
 
 It asks the questions of [`copier.yml`](copier.yml): name, description, visibility, the stack
 (TypeScript on pnpm, or `base`, only the stack-neutral files), and for TypeScript the kind (library,
-app or site), one package or a workspace, the starter files, publishing to npm, the framework (none,
+app or site), one package or a workspace, the starter files, CI, publishing to npm, the framework (none,
 Vue, React, Astro), the design system, browser tests and GitHub Pages; then the README header's
 brand kit, the license and `AGENTS.md`. `--data key=value` or `--data-file answers.yml` answers them up front, and
-`--defaults` takes the default of the rest. Then, in the project:
+`--defaults` takes the default of the rest. A repository that only keeps code, never published to
+npm nor deployed, answers no to CI: it gets no workflow, its settings require no status checks, and
+like a `base` project it gets a `.no-mistakes.yaml` that tells no-mistakes there is no CI.
+Publishing to npm and GitHub Pages run on CI, so without it Copier does not ask them and
+refuses a yes given up front. Then, in the project:
 
 ```sh
 pnpm install   # writes pnpm-lock.yaml, which CI installs from
@@ -134,7 +138,10 @@ actionlint cannot read a workflow called at `@v1`, so
 workflows of the checkout: the inputs it passes, the permissions it grants, and the CI workflow the
 release starts on the Version Packages pull request.
 [`tests/template/update.sh`](tests/template/update.sh) checks `copier update` with the oldest Copier
-`copier.yml` allows and the current one. To try a case locally:
+`copier.yml` allows and the current one, from the last release too, whose tag a clone needs
+(`git fetch --tags`), and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
+checks a project without CI: no workflow and nothing naming one, a `.no-mistakes.yaml`, and
+publishing or GitHub Pages neither asked nor taken. To try a case locally:
 
 ```sh
 tests/template/render.sh vue-app /tmp/vue-app   # renders this checkout, uncommitted changes too

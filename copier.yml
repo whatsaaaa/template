@@ -47,12 +47,16 @@ _exclude:
   - "{% if stack == 'base' %}/tests/{% endif %}"
   - "{% if stack == 'base' %}/packages/{% endif %}"
   - "{% if stack == 'base' %}/apps/{% endif %}"
-  - "{% if stack == 'typescript' %}/.no-mistakes.yaml{% endif %}"
   # license and agents_md
   - "{% if license == 'none' %}/LICENSE{% endif %}"
   - "{% if not agents_md %}/AGENTS.md{% endif %}"
   - "{% if not agents_md %}/CLAUDE.md{% endif %}"
-  # publish, pages, design_system, browser_tests
+  # ci, publish, pages, design_system, browser_tests. A project without CI, base ones too, tells
+  # no-mistakes so in .no-mistakes.yaml. The test holding the version of Playwright to the one
+  # ci.yml names has nothing to hold without CI.
+  - "{% if stack == 'typescript' and (ci | default(true)) %}/.no-mistakes.yaml{% endif %}"
+  - "{% if not (ci | default(true)) %}/.github/workflows/ci.yml{% endif %}"
+  - "{% if not (ci | default(true)) %}/tests/playwright-version.test.ts{% endif %}"
   - "{% if not publish %}/.changeset/{% endif %}"
   - "{% if not publish %}/.github/workflows/release.yml{% endif %}"
   - "{% if not pages %}/.github/workflows/pages.yml{% endif %}"
@@ -94,7 +98,7 @@ _message_after_copy: |
   {{ name }} is ready.
   {%- if stack == 'typescript' %} Next:
 
-    pnpm install    # writes pnpm-lock.yaml, which CI installs from
+    pnpm install    # writes pnpm-lock.yaml{{ ', which CI installs from' if ci }}
     pnpm lint && pnpm format:check && pnpm type-check && pnpm test && pnpm build
   {%- endif %}
 
@@ -159,11 +163,20 @@ starter:
   when: "{{ stack == 'typescript' }}"
   default: true
 
+ci:
+  type: bool
+  help: >-
+    Run CI on GitHub Actions, on every pull request and push to main. No for a repository that only
+    keeps code, never published to npm nor deployed
+  when: "{{ stack == 'typescript' }}"
+  default: "{{ stack == 'typescript' }}"
+
 publish:
   type: bool
   help: Publish the package to npm, with changesets and trusted publishing
-  when: "{{ stack == 'typescript' and kind == 'library' }}"
-  default: "{{ stack == 'typescript' and kind == 'library' and visibility == 'public' }}"
+  when: "{{ stack == 'typescript' and kind == 'library' and ci }}"
+  default: "{{ stack == 'typescript' and kind == 'library' and visibility == 'public' and ci }}"
+  validator: "{% if publish and not ci %}publishing to npm needs CI{% endif %}"
 
 framework:
   type: str
@@ -187,15 +200,16 @@ pages:
   type: bool
   help: >-
     Deploy to GitHub Pages: the app or site itself, or for a library a docs app in apps/docs
-  when: "{{ stack == 'typescript' }}"
-  default: "{{ stack == 'typescript' and kind == 'site' }}"
+  when: "{{ stack == 'typescript' and ci }}"
+  default: "{{ stack == 'typescript' and kind == 'site' and ci }}"
   validator: >-
-    {% if pages and kind == 'library' and workspace == 'single' %}a library's docs app is in
-    apps/docs, which needs workspace: monorepo{% endif %}
+    {% if pages and not ci %}deploying to GitHub Pages needs CI{% elif pages and kind == 'library'
+    and workspace == 'single' %}a library's docs app is in apps/docs, which needs workspace:
+    monorepo{% endif %}
 
 browser_tests:
   type: bool
-  help: Test the built pages in a browser with Playwright, in CI too
+  help: Test the built pages in a browser with Playwright{{ ', in CI too' if ci }}
   when: "{{ stack == 'typescript' }}"
   default: "{{ stack == 'typescript' and (kind != 'library' or pages) }}"
   # A library without a docs app tests its own pages, such as playgrounds, which only an existing

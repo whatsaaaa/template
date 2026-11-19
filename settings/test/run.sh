@@ -54,6 +54,11 @@ run_case demo-apply demo whatsaaaa/demo
 run_case demo-set demo whatsaaaa/demo --check --set publish=false --set 'description="Other"'
 run_case demo-answers-file demo whatsaaaa/demo --check --answers "$here/fixtures/answers.yml"
 
+# Without CI (ci: false) the ruleset requires no status checks, and nothing
+# else changes; demo's own answers have no ci, which means CI.
+run_case demo-no-ci-check demo whatsaaaa/demo --check --set ci=false
+run_case demo-no-ci-apply demo whatsaaaa/demo --set ci=false
+
 # Answers wrapped over several lines must read whole: quoted ones match, and a
 # plain one shows whole in its drift.
 run_case demo-answers-folded demo whatsaaaa/demo --check --answers "$here/fixtures/answers-folded.yml"

@@ -1,0 +1,7 @@
+# A public Vue app on the design system that only keeps code: no CI, never published nor deployed
+name: demo-vue-app-no-ci
+description: A demo Vue app on the design system, without CI
+visibility: public
+kind: app
+ci: false
+browser_tests: false

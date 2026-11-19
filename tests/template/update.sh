@@ -3,7 +3,9 @@
 # into a managed file while keeping the project's own edit to it, and leaves a seeded file alone;
 # and that it never adds the starter files to an existing repository moved onto the template, nor
 # a seeded file of the template's layout, such as packages/<name>/package.json, to one laid out
-# its own way, nor back a managed file it deleted.
+# its own way, nor back a managed file it deleted; and that a project on the last release, whose
+# answers lack the questions added since, updates to this checkout and keeps its CI. The last
+# release is the checkout's latest annotated tag, so a clone needs its tags: git fetch --tags.
 # Usage: tests/template/update.sh
 set -euo pipefail
 
@@ -13,15 +15,36 @@ trap 'rm -rf "$work"' EXIT
 git_quiet() { git -c user.name=test -c user.email=test@example.com -c commit.gpgsign=false -c tag.gpgsign=false "$@" >/dev/null; }
 fail() { echo "::error::$1" >&2; exit 1; }
 
-# The template as this checkout has it, uncommitted files included, released as v100.0.0
+# The last release, and a project from it as it renders its own Vue app case
+release=$(git -C "$root" describe --abbrev=0 HEAD) || fail 'no release tag before HEAD: git fetch --tags'
 mkdir "$work/template"
+git -C "$root" archive "$release" | tar -C "$work/template" -xf -
+git_quiet -C "$work/template" init
+git_quiet -C "$work/template" add -A
+git_quiet -C "$work/template" commit -m "$release"
+git_quiet -C "$work/template" tag -a "$release" -m "$release"
+copier copy --vcs-ref "$release" --defaults --quiet \
+  --data-file "$work/template/tests/template/cases/vue-app.yml" "$work/template" "$work/release"
+git_quiet -C "$work/release" init
+git_quiet -C "$work/release" add -A
+git_quiet -C "$work/release" commit -m 'Start from the last release'
+
+# The template as this checkout has it, uncommitted files included, released as v100.0.0
+git_quiet -C "$work/template" rm -rq .
 git -C "$root" ls-files --cached --others --exclude-standard |
   while read -r file; do [[ -e $root/$file ]] && printf '%s\n' "$file"; done |
   tar -C "$root" -cf - -T - | tar -C "$work/template" -xf -
-git_quiet -C "$work/template" init
 git_quiet -C "$work/template" add -A
 git_quiet -C "$work/template" commit -m v100.0.0
 git_quiet -C "$work/template" tag v100.0.0
+
+(cd "$work/release" && copier update --skip-answered --defaults --vcs-ref v100.0.0 --quiet) ||
+  fail "a project on $release does not update to this checkout"
+grep -qx '_commit: v100.0.0' "$work/release/.copier-answers.yml" ||
+  fail "the .copier-answers.yml of the project on $release does not record v100.0.0"
+[[ -f $work/release/.github/workflows/ci.yml ]] || fail "the update removed ci.yml from the project on $release"
+[[ -z $(find "$work/release" -name '*.rej' -print -quit) ]] || fail "the update of the project on $release left a rejected hunk"
+! grep -rq '^<<<<<<<' "$work/release" --exclude-dir=.git || fail "the update of the project on $release left a conflict"
 
 # A project from it, which edits a managed file and a seeded one
 copier copy --defaults --quiet --data-file "$root/tests/template/cases/library-single.yml" \
@@ -92,4 +115,4 @@ for repository in retrofit docs; do
   files=$(git -C "$work/$repository" status --porcelain --untracked-files=all | grep -v '^ M ' || true)
   [[ -z $files ]] || fail "the update added or deleted files in the $repository retrofit: $files"
 done
-echo 'copier update: managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'
+echo 'copier update: from the last release with its CI kept, managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'
