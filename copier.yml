@@ -174,7 +174,7 @@ publish:
   type: bool
   help: Publish the package to npm, with changesets and trusted publishing
   when: "{{ stack == 'typescript' and kind == 'library' }}"
-  default: "{{ stack == 'typescript' and kind == 'library' and visibility == 'public' }}"
+  default: "{{ stack == 'typescript' and kind == 'library' and visibility == 'public' and ci }}"
   validator: "{% if publish and not ci %}publishing to npm needs CI{% endif %}"
 
 framework:
@@ -200,7 +200,7 @@ pages:
   help: >-
     Deploy to GitHub Pages: the app or site itself, or for a library a docs app in apps/docs
   when: "{{ stack == 'typescript' }}"
-  default: "{{ stack == 'typescript' and kind == 'site' }}"
+  default: "{{ stack == 'typescript' and kind == 'site' and ci }}"
   validator: >-
     {% if pages and not ci %}deploying to GitHub Pages needs CI{% elif pages and kind == 'library'
     and workspace == 'single' %}a library's docs app is in apps/docs, which needs workspace:
