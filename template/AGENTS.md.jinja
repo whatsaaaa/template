@@ -18,8 +18,10 @@ Node.js and pnpm, at the version `packageManager` names in `package.json`. Run `
 - `pnpm test:browser`: builds {{ 'the ' ~ kind ~ ' and tests it' if kind != 'library' else 'the docs app and tests it' if docs_dir else 'the project and tests its own pages' }} in a browser, with Playwright.
 {%- endif %}
 - `pnpm build`: builds {{ 'the package' if kind == 'library' else 'the ' ~ kind }}{{ ' and the docs app' if docs_dir }}.
+{%- if ci %}
 
 CI runs `format:check`, `lint`, `type-check`, `test` and `build`{{ ', then the browser tests' if browser_tests }}, and fails when `lint` changed a file. Run them before you push.
+{%- endif %}
 
 ## Layout
 
@@ -35,7 +37,9 @@ CI runs `format:check`, `lint`, `type-check`, `test` and `build`{{ ', then the b
 {%- if browser_tests %}
 - `tests/browser/`: the browser tests
 {%- endif %}
+{%- if ci %}
 - `.github/workflows/`: CI{{ ', the release' if publish }}{{ ', the GitHub Pages deployment' if pages }}, calling the shared workflows of whatsaaaa/template
+{%- endif %}
 {%- endif %}
 
 ## House rules

@@ -5,7 +5,7 @@
 
 # {{ name }}
 {%- set badges = [] %}
-{%- if typescript %}
+{%- if ci %}
   {%- set badges = badges + ['[![CI](' ~ repo ~ '/actions/workflows/ci.yml/badge.svg)](' ~ repo ~ '/actions/workflows/ci.yml)'] %}
 {%- endif %}
 {%- if publish %}

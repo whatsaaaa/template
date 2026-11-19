@@ -27,6 +27,7 @@ jobs:
           - library-single
           - library-monorepo
           - vue-app
+          - vue-app-no-ci
           - astro-site
           - react-app-monorepo
           - plain-site
@@ -54,9 +55,10 @@ jobs:
           git -C "$PROJECT" add -A
           git -C "$PROJECT" -c user.name=ci -c user.email=ci@example.com commit --quiet -m render
           if [ -f "$PROJECT/package.json" ]; then echo "TYPESCRIPT=true" >>"$GITHUB_ENV"; fi
+          if compgen -G "$PROJECT/.github/workflows/*.yml" >/dev/null; then echo "WORKFLOWS=true" >>"$GITHUB_ENV"; fi
           if [ -f "$PROJECT/playwright.config.ts" ]; then echo "BROWSER=true" >>"$GITHUB_ENV"; fi
       - name: Check the rendered workflows
-        if: env.TYPESCRIPT == 'true'
+        if: env.WORKFLOWS == 'true'
         run: >-
           docker run --rm --volume "$PWD/$PROJECT:/repo" --workdir /repo
           rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
@@ -64,7 +66,7 @@ jobs:
       # Against this checkout's reusable workflows, which actionlint cannot read at @v1. Copier's
       # Python, first on PATH, has PyYAML.
       - name: Check the calls of the reusable workflows
-        if: env.TYPESCRIPT == 'true'
+        if: env.WORKFLOWS == 'true'
         run: python tests/template/check-callers.py "$PROJECT"
       # A rendered project has no pnpm-lock.yaml until its first install
       - if: env.TYPESCRIPT == 'true'
@@ -126,3 +128,18 @@ jobs:
           fi
           echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
       - run: tests/template/update.sh
+
+  # A project without CI: no workflow and nothing naming one, and the answers that need CI refused
+  no-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Copier
+        run: |
+          python3 -m venv "$RUNNER_TEMP/copier"
+          "$RUNNER_TEMP/copier/bin/pip" install --quiet -r tests/template/requirements.txt
+          echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
+      - run: tests/template/no-ci.sh

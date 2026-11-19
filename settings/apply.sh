@@ -322,7 +322,7 @@ desired=$(jq -n \
   ($a.publish == true) as $publish
   | ($a.pages == true) as $pages
   | ($overrides.required_checks // $a.required_checks // (
-      if ($a.stack // "") == "typescript" then
+      if ($a.stack // "") == "typescript" and $a.ci != false then
         ["ci / check"] + (if $a.browser_tests == true then ["ci / browser"] else [] end)
       else [] end)) as $checks
   | {

@@ -27,7 +27,7 @@ gh repo list whatsaaaa --limit 100 --json nameWithOwner --jq '.[].nameWithOwner'
 | Merging | squash merges only, titled with the pull request title and carrying the commit messages; delete branch on merge on, update branch on, auto-merge off | |
 | Actions | default `GITHUB_TOKEN` read-only | Actions may create and approve pull requests when `publish` (changesets opens the Version Packages pull request) |
 | Security | public repositories: secret scanning, push protection, Dependabot alerts and private vulnerability reporting on | |
-| Rulesets | public repositories: `main` from [`rulesets/main.json`](rulesets/main.json): no deletion, no force-push, signed commits, pull requests with 0 approvals and squash merges only, no bypass | required status checks: `ci / check` when `stack` is `typescript`, plus `ci / browser` with `browser_tests` |
+| Rulesets | public repositories: `main` from [`rulesets/main.json`](rulesets/main.json): no deletion, no force-push, signed commits, pull requests with 0 approvals and squash merges only, no bypass | required status checks: `ci / check` when `stack` is `typescript` and `ci` is not `false`, plus `ci / browser` with `browser_tests` |
 | Pages | | `build_type: workflow` when `pages` |
 | Environments | | `npm` ([`environments/npm.json`](environments/npm.json): reviewer `whatsaaaa`, deployments from `main`) when `publish`; `github-pages` (deployments from `main`) when `pages` |
 | Labels | the ten in [`labels.json`](labels.json); labels a repository adds itself are left alone | |
@@ -45,7 +45,7 @@ The script reads the repository's `.copier-answers.yml` through the contents API
 | `--answers <file>` | answers from a YAML file, merged over the repository's |
 | `--set <key>=<value>` | one answer, repeatable; the value is YAML (`--set publish=false`) |
 
-The answers it reads are `description`, `publish`, `pages`, `stack` and `browser_tests`. `required_checks` (a list of check names) is a settings-only answer for repositories whose CI does not call the shared workflows yet; it replaces the derived check names. A rendered repository whose CI runs more checks than the defaults lists them in its override instead.
+The answers it reads are `description`, `publish`, `pages`, `stack`, `ci` and `browser_tests`; answers without `ci`, from before the template asked it, mean CI. `required_checks` (a list of check names) is a settings-only answer for repositories whose CI does not call the shared workflows yet; it replaces the derived check names. A rendered repository whose CI runs more checks than the defaults lists them in its override instead.
 
 ## Overrides
 
