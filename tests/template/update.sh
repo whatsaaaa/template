@@ -3,8 +3,9 @@
 # into a managed file while keeping the project's own edit to it, and leaves a seeded file alone;
 # and that it never adds the starter files to an existing repository moved onto the template, nor
 # a seeded file of the template's layout, such as packages/<name>/package.json, to one laid out
-# its own way, nor back a managed file it deleted; and that a project on the last release, whose
-# answers lack the questions added since, updates to this checkout and keeps its CI. The last
+# its own way, nor a docs app to a single package with its own docs site, nor back a managed file
+# it deleted; and that a project on the last release, whose answers lack the questions added
+# since, updates to this checkout and keeps its CI, and what it deploys to GitHub Pages. The last
 # release is the checkout's latest annotated tag, so a clone needs its tags: git fetch --tags.
 # Usage: tests/template/update.sh
 set -euo pipefail
@@ -14,8 +15,11 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 git_quiet() { git -c user.name=test -c user.email=test@example.com -c commit.gpgsign=false -c tag.gpgsign=false "$@" >/dev/null; }
 fail() { echo "::error::$1" >&2; exit 1; }
+# pages_inputs <project>: what its pages.yml passes to the shared Pages workflow
+pages_inputs() { sed -e '1,/^    with:$/d' "$1/.github/workflows/pages.yml"; }
 
-# The last release, and a project from it as it renders its own Vue app case
+# The last release, and two projects from it as it renders its own cases: a Vue app, and a library
+# with its docs app on GitHub Pages
 release=$(git -C "$root" describe --abbrev=0 HEAD) || fail 'no release tag before HEAD: git fetch --tags'
 mkdir "$work/template"
 git -C "$root" archive "$release" | tar -C "$work/template" -xf -
@@ -25,9 +29,14 @@ git_quiet -C "$work/template" commit -m "$release"
 git_quiet -C "$work/template" tag -a "$release" -m "$release"
 copier copy --vcs-ref "$release" --defaults --quiet \
   --data-file "$work/template/tests/template/cases/vue-app.yml" "$work/template" "$work/release"
-git_quiet -C "$work/release" init
-git_quiet -C "$work/release" add -A
-git_quiet -C "$work/release" commit -m 'Start from the last release'
+copier copy --vcs-ref "$release" --defaults --quiet \
+  --data-file "$work/template/tests/template/cases/library-monorepo.yml" "$work/template" "$work/release-pages"
+for project in release release-pages; do
+  git_quiet -C "$work/$project" init
+  git_quiet -C "$work/$project" add -A
+  git_quiet -C "$work/$project" commit -m 'Start from the last release'
+done
+deployed=$(pages_inputs "$work/release-pages")
 
 # The template as this checkout has it, uncommitted files included, released as v100.0.0
 git_quiet -C "$work/template" rm -rq .
@@ -38,13 +47,17 @@ git_quiet -C "$work/template" add -A
 git_quiet -C "$work/template" commit -m v100.0.0
 git_quiet -C "$work/template" tag v100.0.0
 
-(cd "$work/release" && copier update --skip-answered --defaults --vcs-ref v100.0.0 --quiet) ||
-  fail "a project on $release does not update to this checkout"
-grep -qx '_commit: v100.0.0' "$work/release/.copier-answers.yml" ||
-  fail "the .copier-answers.yml of the project on $release does not record v100.0.0"
-[[ -f $work/release/.github/workflows/ci.yml ]] || fail "the update removed ci.yml from the project on $release"
-[[ -z $(find "$work/release" -name '*.rej' -print -quit) ]] || fail "the update of the project on $release left a rejected hunk"
-! grep -rq '^<<<<<<<' "$work/release" --exclude-dir=.git || fail "the update of the project on $release left a conflict"
+for project in release release-pages; do
+  (cd "$work/$project" && copier update --skip-answered --defaults --vcs-ref v100.0.0 --quiet) ||
+    fail "a project on $release does not update to this checkout"
+  grep -qx '_commit: v100.0.0' "$work/$project/.copier-answers.yml" ||
+    fail "the .copier-answers.yml of the project on $release does not record v100.0.0"
+  [[ -f $work/$project/.github/workflows/ci.yml ]] || fail "the update removed ci.yml from the project on $release"
+  [[ -z $(find "$work/$project" -name '*.rej' -print -quit) ]] || fail "the update of the project on $release left a rejected hunk"
+  ! grep -rq '^<<<<<<<' "$work/$project" --exclude-dir=.git || fail "the update of the project on $release left a conflict"
+done
+[[ $(pages_inputs "$work/release-pages") == "$deployed" ]] ||
+  fail "the update changed what the project on $release deploys to GitHub Pages: $(pages_inputs "$work/release-pages")"
 
 # A project from it, which edits a managed file and a seeded one
 copier copy --defaults --quiet --data-file "$root/tests/template/cases/library-single.yml" \
@@ -77,6 +90,14 @@ git_quiet -C "$work/docs" init
 git_quiet -C "$work/docs" add -A
 git_quiet -C "$work/docs" commit -m 'Move onto the template'
 
+# One laid out as the design system is: a single package whose own docs site is on GitHub Pages
+single=$root/tests/template/cases/library-single-docs
+cp -R "$single" "$work/single"
+copier copy --defaults --quiet --data-file "$single.yml" "$work/template" "$work/single"
+git_quiet -C "$work/single" init
+git_quiet -C "$work/single" add -A
+git_quiet -C "$work/single" commit -m 'Move onto the template'
+
 # v100.0.1 changes the same two files, and a seeded file the project kept as it was
 echo '# A template change' >>"$work/template/template/.gitignore.jinja"
 echo 'A line of the template.' >>"$work/template/template/README.md.jinja"
@@ -87,6 +108,7 @@ git_quiet -C "$work/template" tag v100.0.1
 (cd "$work/project" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/retrofit" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/docs" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
+(cd "$work/single" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 
 project=$work/project
 grep -qx '_commit: v100.0.1' "$project/.copier-answers.yml" || fail '.copier-answers.yml does not record v100.0.1'
@@ -110,9 +132,12 @@ diff -r "$retrofit/packages/demo-retrofit/src" "$member/src" >&2 || fail "the up
 grep -qx '_commit: v100.0.1' "$work/docs/.copier-answers.yml" || fail "the docs retrofit's .copier-answers.yml does not record v100.0.1"
 grep -qx '# A template change' "$work/docs/.gitignore" || fail "the template change did not reach the docs retrofit's .gitignore"
 
-# In both retrofits, the update changes managed files and neither adds a file nor deletes one
-for repository in retrofit docs; do
+grep -qx '_commit: v100.0.1' "$work/single/.copier-answers.yml" || fail "the single-package retrofit's .copier-answers.yml does not record v100.0.1"
+grep -qx '# A template change' "$work/single/.gitignore" || fail "the template change did not reach the single-package retrofit's .gitignore"
+
+# In every retrofit, the update changes managed files and neither adds a file nor deletes one
+for repository in retrofit docs single; do
   files=$(git -C "$work/$repository" status --porcelain --untracked-files=all | grep -v '^ M ' || true)
   [[ -z $files ]] || fail "the update added or deleted files in the $repository retrofit: $files"
 done
-echo 'copier update: from the last release with its CI kept, managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'
+echo 'copier update: from the last release with its CI and its Pages deployment kept, managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'

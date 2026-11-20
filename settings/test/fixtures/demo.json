@@ -33,7 +33,7 @@
   },
   "GET repos/whatsaaaa/demo/contents/.copier-answers.yml": {
     "status": 200,
-    "body": "# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY\n_commit: v1.0.0\n_src_path: https://github.com/whatsaaaa/template.git\nagents_md: true\nbrand_kit: whatsaaaa\nbrowser_tests: true\ndescription: 'Demo: a library that''s small' # quoted, with a comment\ndesign_system: false\nframework: vue\nkind: library\nlicense: MIT\nname: demo\nnested:\n  ignored: true\npages: true\npublish: true\nstack: typescript\nvisibility: public\nworkspace: single\n"
+    "body": "# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY\n_commit: v1.0.0\n_src_path: https://github.com/whatsaaaa/template.git\nagents_md: true\nbrand_kit: whatsaaaa\nbrowser_tests: true\ndescription: 'Demo: a library that''s small' # quoted, with a comment\ndesign_system: false\nframework: vue\nkind: library\nlicense: MIT\nname: demo\nnested:\n  ignored: true\npages: true\npages_artifact_path: docs/.vitepress/dist\npages_build_script: docs:build\npublish: true\nstack: typescript\nvisibility: public\nworkspace: single\n"
   },
   "GET repos/whatsaaaa/demo/actions/permissions/workflow": {
     "status": 200,

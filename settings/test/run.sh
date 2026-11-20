@@ -49,6 +49,8 @@ run_case config-apply config whatsaaaa/config
 
 # Written by hand: a repository in line with its .copier-answers.yml, which
 # must report nothing and change nothing, and the same with answers overridden.
+# It is a single-package library whose own docs site is on Pages: the settings
+# come from `pages` alone, whatever builds the site.
 run_case demo-check demo whatsaaaa/demo --check
 run_case demo-apply demo whatsaaaa/demo
 run_case demo-set demo whatsaaaa/demo --check --set publish=false --set 'description="Other"'

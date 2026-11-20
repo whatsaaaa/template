@@ -20,4 +20,7 @@ jobs:
       pages: write
       id-token: write
     with:
-      artifact-path: {{ web ~ 'dist' }}
+{%- if pages_build_script != 'build' %}
+      build-script: {{ pages_build_script }}
+{%- endif %}
+      artifact-path: {{ pages_artifact_path }}

@@ -1,0 +1,15 @@
+# An existing library of one package moved onto the template, laid out as the design system is:
+# its docs site is its own, VitePress in docs/, which its own script builds into
+# docs/.vitepress/dist for GitHub Pages. No docs app in apps/docs, which only a workspace has.
+# library-single-docs/ is the repository before the move.
+name: demo-single-docs
+description: A demo library of one package, with its own VitePress docs
+visibility: public
+kind: library
+workspace: single
+publish: true
+pages: true
+pages_build_script: docs:build
+pages_artifact_path: docs/.vitepress/dist
+starter: false
+agents_md: false
