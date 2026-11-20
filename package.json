@@ -15,7 +15,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
     "@vitejs/plugin-vue": "^6.0.11",
-    "@whatsaaaa/design-system": "^0.8.2",
+    "@whatsaaaa/design-system": "^0.14.0",
     "@whatsaaaa/eslint-config": "^1.0.0",
     "@whatsaaaa/format-config": "^1.0.0",
     "@whatsaaaa/oxlint-config": "^1.0.0",
