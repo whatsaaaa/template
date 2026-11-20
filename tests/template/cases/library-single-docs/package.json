@@ -1,0 +1,69 @@
+{
+  "name": "@whatsaaaa/demo-single-docs",
+  "version": "0.0.0",
+  "description": "A demo library of one package, with its own VitePress docs",
+  "keywords": [],
+  "homepage": "https://whatsaaaa.github.io/demo-single-docs/",
+  "bugs": "https://github.com/whatsaaaa/demo-single-docs/issues",
+  "license": "MIT",
+  "author": "Whatsaaaa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whatsaaaa/demo-single-docs.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "pnpm build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "test": "vitest run",
+    "type-check": "tsc && tsc -p docs/.vitepress",
+    "lint": "run-s \"lint:*\"",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "lint:package": "publint --strict && pnpm pack --out .attw/package.tgz && attw .attw/package.tgz --profile esm-only",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "changeset": "changeset"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^22.20.5",
+    "@whatsaaaa/eslint-config": "^1.0.0",
+    "@whatsaaaa/format-config": "^1.0.0",
+    "@whatsaaaa/oxlint-config": "^1.0.0",
+    "@whatsaaaa/tsconfig": "^1.0.0",
+    "eslint": "^10.15.0",
+    "jiti": "^2.7.0",
+    "npm-run-all2": "^9.0.4",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "publint": "^0.3.25",
+    "typescript": "~6.0.3",
+    "vitepress": "2.0.0-alpha.21",
+    "vitest": "^5.1.0",
+    "vue": "^3.5.45"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "packageManager": "pnpm@12.21.0"
+}

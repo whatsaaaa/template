@@ -22,7 +22,8 @@ for kind in library site; do
 done
 # A person answering yes to every question Copier asks, all but publish and pages answered up front:
 # Copier does not validate a yes typed in, so it must not ask them without CI. With CI the same yes
-# deploys the site, so the answers do reach the questions.
+# deploys the site, so the answers do reach the questions; what Pages builds, which is not a yes or
+# no, is answered up front there.
 interactive() { # <destination> <copier --data>...
   local destination=$1
   shift
@@ -37,7 +38,7 @@ interactive "$work/yes-library" --data kind=library --data workspace=monorepo --
 interactive "$work/yes-site" --data kind=site --data workspace=single --data framework=astro \
   --data ci=false
 interactive "$work/yes-site-ci" --data kind=site --data workspace=single --data framework=astro \
-  --data ci=true
+  --data ci=true --data pages_build_script=build --data pages_artifact_path=dist
 [[ -f $work/yes-site-ci/.github/workflows/pages.yml ]] ||
   fail 'a yes to every question did not deploy a site with CI to GitHub Pages'
 [[ ! -e $work/yes-site-ci/.no-mistakes.yaml ]] ||

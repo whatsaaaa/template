@@ -17,7 +17,8 @@ copier copy --vcs-ref vX.Y.Z https://github.com/whatsaaaa/template.git my-projec
 It asks the questions of [`copier.yml`](copier.yml): name, description, visibility, the stack
 (TypeScript on pnpm, or `base`, only the stack-neutral files), and for TypeScript the kind (library,
 app or site), one package or a workspace, the starter files, CI, publishing to npm, the framework (none,
-Vue, React, Astro), the design system, browser tests and GitHub Pages; then the README header's
+Vue, React, Astro), the design system, GitHub Pages, with the script that builds its site and the
+directory it is built into, and browser tests; then the README header's
 brand kit, the license and `AGENTS.md`. `--data key=value` or `--data-file answers.yml` answers them up front, and
 `--defaults` takes the default of the rest. A repository that only keeps code, never published to
 npm nor deployed, answers no to CI: it gets no workflow, its settings require no status checks, and
@@ -32,6 +33,26 @@ git add -A     # .copier-answers.yml too: copier update reads it
 
 The git remote stays SSH: `git@github.com:whatsaaaa/my-project.git`. The repository settings come
 from [`settings/apply.sh`](settings/README.md), which reads the same answers.
+
+GitHub Pages deploys the app or site itself, or a library's docs site. `pages_build_script` is the
+`package.json` script, at the root of the repository, that builds the site, and
+`pages_artifact_path` the directory it is built into: `.github/workflows/pages.yml` passes both to
+the shared workflow. Their defaults are the template's own layout: `build`, into `dist/` of the app
+or site, or of the docs app a library in a workspace gets in `apps/docs`. A single-package library
+gets no docs app, which is a member of a workspace: its docs site is its own, such as VitePress in
+`docs/`, so no default knows it and Copier asks for both:
+
+```sh
+copier copy ... --data kind=library --data workspace=single --data pages=true \
+  --data pages_build_script=docs:build --data pages_artifact_path=docs/.vitepress/dist
+```
+
+A workspace whose docs site is its own, not the template's page, names them the same way. A site of
+the project's own also sets its base path itself, in its own config: GitHub Pages serves a project
+from `/<name>/`, so VitePress takes `base: '/my-project/'` in `.vitepress/config.ts`. The template
+writes that line only into the Vite or Astro config it seeds, which is the project's own from then
+on. In the config, every build reads it, on a laptop, in the browser tests and in the Pages
+workflow, which an input of the workflow would not reach.
 
 Some files are **seeded**: rendered once, then the project's own, which an update leaves alone:
 `README.md`, `AGENTS.md`, `package.json`, the starter `src/` and `tests/`, and the Vitest,
@@ -141,7 +162,13 @@ release starts on the Version Packages pull request.
 `copier.yml` allows and the current one, from the last release too, whose tag a clone needs
 (`git fetch --tags`), and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
 checks a project without CI: no workflow and nothing naming one, a `.no-mistakes.yaml`, and
-publishing or GitHub Pages neither asked nor taken. To try a case locally:
+publishing or GitHub Pages neither asked nor taken.
+[`tests/template/pages.sh`](tests/template/pages.sh) checks what each layout deploys to GitHub
+Pages: the template's own as before the build script and the artifact path were answers, a
+single-package library the docs site it builds itself, without a docs app, and Copier refusing a
+script or a path that deploys nothing. For each case with a Pages workflow,
+[`tests/template/build-pages.py`](tests/template/build-pages.py) then runs the build script the
+workflow names and checks that it wrote the site into the artifact path. To try a case locally:
 
 ```sh
 tests/template/render.sh vue-app /tmp/vue-app   # renders this checkout, uncommitted changes too

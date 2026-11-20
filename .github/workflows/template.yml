@@ -15,7 +15,7 @@ concurrency:
 jobs:
   # Each case of tests/template/cases rendered and checked as its own CI would check it: actionlint
   # and the calls of the reusable workflows on its workflows, the scripts of node-ci.yml, set up by
-  # the setup action, then the browser tests.
+  # the setup action, then the browser tests and the site its Pages workflow deploys.
   render:
     name: render (${{ matrix.case }})
     runs-on: ubuntu-latest
@@ -34,6 +34,7 @@ jobs:
           - react-library
           - library-retrofit
           - library-retrofit-docs
+          - library-single-docs
           - base
     env:
       CASE: ${{ matrix.case }}
@@ -57,6 +58,7 @@ jobs:
           if [ -f "$PROJECT/package.json" ]; then echo "TYPESCRIPT=true" >>"$GITHUB_ENV"; fi
           if compgen -G "$PROJECT/.github/workflows/*.yml" >/dev/null; then echo "WORKFLOWS=true" >>"$GITHUB_ENV"; fi
           if [ -f "$PROJECT/playwright.config.ts" ]; then echo "BROWSER=true" >>"$GITHUB_ENV"; fi
+          if [ -f "$PROJECT/.github/workflows/pages.yml" ]; then echo "PAGES=true" >>"$GITHUB_ENV"; fi
       - name: Check the rendered workflows
         if: env.WORKFLOWS == 'true'
         run: >-
@@ -102,6 +104,10 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm run test:browser
+      # As pages.yml would: the build script it names must write the site into its artifact path
+      - name: Build the site GitHub Pages deploys
+        if: env.PAGES == 'true'
+        run: python tests/template/build-pages.py "$PROJECT"
 
   update:
     name: update (copier ${{ matrix.copier }})
@@ -146,3 +152,19 @@ jobs:
           "$RUNNER_TEMP/copier/bin/pip" install --quiet -r tests/template/requirements.txt
           echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
       - run: tests/template/no-ci.sh
+
+  # What GitHub Pages deploys: the template's own layouts as before, a single-package library's own
+  # docs site, and the build scripts and artifact paths Copier refuses
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Copier
+        run: |
+          python3 -m venv "$RUNNER_TEMP/copier"
+          "$RUNNER_TEMP/copier/bin/pip" install --quiet -r tests/template/requirements.txt
+          echo "$RUNNER_TEMP/copier/bin" >>"$GITHUB_PATH"
+      - run: tests/template/pages.sh

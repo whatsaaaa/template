@@ -199,25 +199,58 @@ design_system:
 pages:
   type: bool
   help: >-
-    Deploy to GitHub Pages: the app or site itself, or for a library a docs app in apps/docs
+    Deploy to GitHub Pages: the app or site itself, or a library's docs site, which is the docs
+    app in apps/docs of a workspace, or a site of its own that a single package builds
   when: "{{ stack == 'typescript' and ci }}"
   default: "{{ stack == 'typescript' and kind == 'site' and ci }}"
+  validator: "{% if pages and not ci %}deploying to GitHub Pages needs CI{% endif %}"
+
+# What the Pages workflow builds and deploys. The defaults are the template's own layout: `build`,
+# into dist/ of the package with the pages, which is `web`, computed below. A single-package
+# library gets no docs app from the template, so its docs site is its own, such as VitePress: no
+# default knows it, and Copier asks for both.
+pages_build_script:
+  type: str
+  help: >-
+    The package.json script, at the root of the repository, that builds the site Pages deploys,
+    such as docs:build
+  when: "{{ pages }}"
+  default: "{{ UNSET if pages and kind == 'library' and workspace == 'single' else 'build' }}"
   validator: >-
-    {% if pages and not ci %}deploying to GitHub Pages needs CI{% elif pages and kind == 'library'
-    and workspace == 'single' %}a library's docs app is in apps/docs, which needs workspace:
-    monorepo{% endif %}
+    {% if pages and not (pages_build_script |
+    regex_search('^[A-Za-z0-9]([A-Za-z0-9:._-]*[A-Za-z0-9])?$')) %}the name of a package.json
+    script, such as docs:build: letters and digits, with colons, dots, underscores or dashes
+    between them{% endif %}
+
+pages_artifact_path:
+  type: str
+  help: >-
+    The directory that script builds the site into, from the root of the repository, such as
+    docs/.vitepress/dist
+  when: "{{ pages }}"
+  default: >-
+    {% if pages and kind == 'library' and workspace == 'single' %}{{ UNSET }}{% elif workspace ==
+    'monorepo' %}{{ 'apps/docs' if kind == 'library' else 'packages/' ~ name }}/dist{% else
+    %}dist{% endif %}
+  validator: >-
+    {% if pages and (not (pages_artifact_path |
+    regex_search('^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$')) or pages_artifact_path |
+    regex_search('(^|/)[.]{1,2}(/|$)')) %}a directory from the root of the repository, such as
+    docs/.vitepress/dist: no slash at either end, and neither . nor .. in it{% endif %}
 
 browser_tests:
   type: bool
   help: Test the built pages in a browser with Playwright{{ ', in CI too' if ci }}
   when: "{{ stack == 'typescript' }}"
-  default: "{{ stack == 'typescript' and (kind != 'library' or pages) }}"
-  # A library without a docs app tests its own pages, such as playgrounds, which only an existing
-  # repository has
+  default: >-
+    {{ stack == 'typescript' and (kind != 'library' or (pages and workspace == 'monorepo')) }}
+  # A library without the docs app in apps/docs tests its own pages, such as playgrounds or its
+  # own docs site, which only an existing repository has
   validator: >-
-    {% if browser_tests and kind == 'library' and not pages and starter %}a new library has no
-    page to test without its docs app (pages); an existing repository with its own pages, such as
-    playgrounds, answers no to starter{% endif %}
+    {% if browser_tests and kind == 'library' and not (pages and workspace == 'monorepo') and
+    starter %}a new library has no page to test without the docs app in apps/docs (pages, in a
+    workspace); an existing repository with its own pages, such as playgrounds or its own docs
+    site, answers no to starter{% endif %}
 
 brand_kit:
   type: str
@@ -316,11 +349,14 @@ member_dir:
   when: false
   default: "{{ 'packages/' ~ name if workspace == 'monorepo' else '' }}"
 
-# A library's docs app, which Pages deploys
+# A library's docs app, which Pages deploys: a member of the workspace. A single package has
+# none, and Pages deploys the docs site it builds itself.
 docs_dir:
   type: str
   when: false
-  default: "{{ 'apps/docs' if stack == 'typescript' and kind == 'library' and pages else '' }}"
+  default: >-
+    {{ 'apps/docs' if stack == 'typescript' and kind == 'library' and workspace == 'monorepo' and
+    pages else '' }}
 
 # The package with the pages: the app or site, or a library's docs app. Empty for a library
 # without one, which skips the files of a page.
