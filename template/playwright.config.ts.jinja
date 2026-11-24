@@ -3,11 +3,24 @@ import { defineConfig, devices } from '@playwright/test'
 /**
 {%- if web_dir %}
  * Browser tests of the built {{ 'docs app' if kind == 'library' else kind }}, which "pnpm test:browser" builds first.
+ *
+ * Every run serves it itself, on a port of its own, and never takes a server that is already
+ * running for its own: that could be another copy of the project with another build.
+ * BROWSER_TEST_URL names a server to test instead, such as one started by hand:
+ *
+ *   {{ 'pnpm' if web_dir == '.' else 'pnpm --filter ./' ~ web_dir }} preview
+ *   BROWSER_TEST_URL=http://localhost:{{ 4321 if ui == 'astro' else 4173 }} pnpm test:browser:run
 {%- else %}
  * Browser tests of the project's own pages, such as its playgrounds, which "pnpm test:browser"
  * builds first. A webServer here serves them, and use.baseURL points at it.
 {%- endif %}
  */
+{%- if web_dir %}
+
+// set by then in the tests: every worker reads this file again, after the server below has started
+const serverUrl = process.env.BROWSER_TEST_URL
+{%- endif %}
+
 export default defineConfig({
   testDir: 'tests/browser',
   fullyParallel: true,
@@ -16,25 +29,28 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
 {%- if web_dir %}
-    baseURL: 'http://127.0.0.1:4173{{ base_path }}',
+    baseURL: serverUrl && new URL('{{ base_path }}', serverUrl).href,
 {%- endif %}
     colorScheme: 'dark',
   },
 {%- if web_dir %}
-  webServer: {
+  webServer: serverUrl
+    ? undefined
+    : {
+        // port 0: the server binds a port the system picks, then prints its address
 {%- if ui == 'astro' %}
-    // --ignore-lock keeps the server in the foreground, where Playwright stops it: Astro starts it
-    // in the background when it detects a coding agent
+        // --ignore-lock keeps the server in the foreground, where Playwright stops it: Astro starts
+        // it in the background when it detects a coding agent
 {%- endif %}
-{%- set command = "'" ~ ('pnpm' if web_dir == '.' else 'pnpm --filter ./' ~ web_dir) ~ ' preview --host 127.0.0.1 --port 4173 ' ~ ('--ignore-lock' if ui == 'astro' else '--strictPort') ~ "'," %}
-{%- if ('    command: ' ~ command) | length <= 100 %}
-    command: {{ command }}
+{%- set command = "'" ~ ('pnpm' if web_dir == '.' else 'pnpm --filter ./' ~ web_dir) ~ ' preview --host 127.0.0.1 --port 0' ~ (' --ignore-lock' if ui == 'astro' else '') ~ "'," %}
+{%- if ('        command: ' ~ command) | length <= 100 %}
+        command: {{ command }}
 {%- else %}
-    command:
-      {{ command }}
+        command:
+          {{ command }}
 {%- endif %}
-    url: 'http://127.0.0.1:4173{{ base_path }}',
-    reuseExistingServer: !process.env.CI,
-  },
+        // the address the server prints, which goes to the environment as BROWSER_TEST_URL
+        wait: { stdout: /(?<browser_test_url>http:\/\/127\.0\.0\.1:\d+)/ },
+      },
 {%- endif %}
 })
