@@ -13,7 +13,7 @@
   {%- set dev = dev + ['stylelint', 'stylelint-config-standard',
     'stylelint-value-no-unknown-custom-properties'] %}
   {%- if framework == 'vue' %}{% set dev = dev + ['postcss-html'] %}{% endif %}
-  {#- stylelint reads the tokens from the root #}
+  {#- stylelint loads the design system's config from the root #}
   {%- if not single %}{% set dev = dev + ['@whatsaaaa/design-system'] %}{% endif %}
 {%- endif -%}
 {%- if publish %}
