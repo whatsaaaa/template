@@ -59,6 +59,7 @@ jobs:
           if compgen -G "$PROJECT/.github/workflows/*.yml" >/dev/null; then echo "WORKFLOWS=true" >>"$GITHUB_ENV"; fi
           if [ -f "$PROJECT/playwright.config.ts" ]; then echo "BROWSER=true" >>"$GITHUB_ENV"; fi
           if [ -f "$PROJECT/.github/workflows/pages.yml" ]; then echo "PAGES=true" >>"$GITHUB_ENV"; fi
+          if [ -f "$PROJECT/tests/playwright-version.test.ts" ]; then echo "PLAYWRIGHT_VERSION_TEST=true" >>"$GITHUB_ENV"; fi
       - name: Check the rendered workflows
         if: env.WORKFLOWS == 'true'
         run: >-
@@ -98,6 +99,10 @@ jobs:
               }
             fi
           done
+      # Against the ways a project writes the version: quoted, in a comment, a range in package.json
+      - name: Check the Playwright version test
+        if: env.PLAYWRIGHT_VERSION_TEST == 'true'
+        run: tests/template/playwright-version.sh "$PROJECT"
       - name: Run the browser tests
         if: env.BROWSER == 'true'
         working-directory: ${{ env.PROJECT }}

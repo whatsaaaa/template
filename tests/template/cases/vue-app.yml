@@ -1,4 +1,5 @@
 # A private Vue app on the design system, tested in a browser: the answers' defaults for an app
 name: demo-vue-app
-description: A demo Vue app on the design system
+# Long enough that Copier wraps it in .copier-answers.yml, which format:check must leave alone
+description: A demo Vue app on the design system, with a description long enough for Copier to wrap
 kind: app
