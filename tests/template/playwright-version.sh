@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks the seeded tests/playwright-version.test.ts of a rendered, installed project against the
+# Checks the managed tests/playwright-version.test.ts of a rendered, installed project against the
 # ways a project writes the version: it reads ci.yml as YAML, so a quoted version passes and one
 # only in a comment fails, and it compares the version installed, so a range in package.json
 # passes. Each change is undone before the next.

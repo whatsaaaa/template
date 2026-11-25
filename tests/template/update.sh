@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # Checks that `copier update`, run as Renovate runs it (no --trust), carries a template change
 # into a managed file while keeping the project's own edit to it, and leaves a seeded file alone;
-# and that it never adds the starter files to an existing repository moved onto the template, nor
-# a seeded file of the template's layout, such as packages/<name>/package.json, to one laid out
-# its own way, nor a docs app to a single package with its own docs site, nor back a managed file
-# it deleted; and that a project on the last release, whose answers lack the questions added
-# since, updates to this checkout and keeps its CI, and what it deploys to GitHub Pages. The last
-# release is the checkout's latest annotated tag, so a clone needs its tags: git fetch --tags.
+# that tests/playwright-version.test.ts is managed, though the rest of tests/ is seeded: the
+# template's change reaches it, and a project that deleted it keeps it deleted; that it never adds
+# the starter files to an existing repository moved onto the template, nor a seeded file of the
+# template's layout, such as packages/<name>/package.json, to one laid out its own way, nor a docs
+# app to a single package with its own docs site, nor back a managed file it deleted; and that a
+# project on the last release, whose answers lack the questions added since, updates to this
+# checkout and keeps its CI, and what it deploys to GitHub Pages. The last release is the
+# checkout's latest annotated tag, so a clone needs its tags: git fetch --tags.
 # Usage: tests/template/update.sh
 set -euo pipefail
 
@@ -70,7 +72,18 @@ echo 'A line of the project.' >>"$work/project/README.md"
 git_quiet -C "$work/project" add -A
 git_quiet -C "$work/project" commit -m 'Start from the template'
 
-# An existing repository moved onto it, without the starter files (starter: no)
+# A project with the Playwright version test, which deletes it
+copier copy --defaults --quiet --data-file "$root/tests/template/cases/vue-app.yml" \
+  "$work/template" "$work/app"
+[[ -f $work/app/tests/playwright-version.test.ts ]] || fail 'the vue-app case has no Playwright version test to delete'
+git_quiet -C "$work/app" init
+git_quiet -C "$work/app" add -A
+git_quiet -C "$work/app" commit -m 'Start from the template'
+git_quiet -C "$work/app" rm -q tests/playwright-version.test.ts
+git_quiet -C "$work/app" commit -m 'Delete the Playwright version test'
+
+# An existing repository moved onto it, without the starter files (starter: no), which keeps the
+# Playwright version test
 retrofit=$root/tests/template/cases/library-retrofit
 cp -R "$retrofit" "$work/retrofit"
 copier copy --defaults --quiet --data-file "$retrofit.yml" "$work/template" "$work/retrofit"
@@ -98,14 +111,17 @@ git_quiet -C "$work/single" init
 git_quiet -C "$work/single" add -A
 git_quiet -C "$work/single" commit -m 'Move onto the template'
 
-# v100.0.1 changes the same two files, and a seeded file the project kept as it was
+# v100.0.1 changes the same two files, a seeded file the project kept as it was, and the
+# Playwright version test
 echo '# A template change' >>"$work/template/template/.gitignore.jinja"
 echo 'A line of the template.' >>"$work/template/template/README.md.jinja"
 echo '// A template change' >>"$work/template/template/{{ package_dir }}/src/index.ts.jinja"
+echo '// A template change' >>"$work/template/template/tests/playwright-version.test.ts"
 git_quiet -C "$work/template" commit -am v100.0.1
 git_quiet -C "$work/template" tag v100.0.1
 
 (cd "$work/project" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
+(cd "$work/app" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/retrofit" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/docs" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
 (cd "$work/single" && copier update --skip-answered --defaults --vcs-ref v100.0.1 --quiet)
@@ -120,14 +136,20 @@ grep -qx 'A line of the project.' "$project/README.md" || fail "the project's ed
 [[ -z $(find "$project" -name '*.rej' -print -quit) ]] || fail 'the update left a rejected hunk'
 ! grep -rq '^<<<<<<<' "$project" --exclude-dir=.git || fail 'the update left a conflict'
 
+grep -qx '_commit: v100.0.1' "$work/app/.copier-answers.yml" || fail "the app's .copier-answers.yml does not record v100.0.1"
+[[ ! -e $work/app/tests/playwright-version.test.ts ]] ||
+  fail 'the update added back tests/playwright-version.test.ts, a managed file the project deleted'
+
 member=$work/retrofit/packages/demo-retrofit
 grep -qx '_commit: v100.0.1' "$work/retrofit/.copier-answers.yml" || fail "the retrofit's .copier-answers.yml does not record v100.0.1"
 grep -qx '# A template change' "$work/retrofit/.gitignore" || fail "the template change did not reach the retrofit's .gitignore"
 diff -r "$retrofit/packages/demo-retrofit/src" "$member/src" >&2 || fail "the update changed the retrofit's own src/"
+grep -qx '// A template change' "$work/retrofit/tests/playwright-version.test.ts" ||
+  fail "the template change did not reach the retrofit's tests/playwright-version.test.ts, a managed file"
 [[ ! -e $member/tests ]] || fail 'the update added the starter unit test to the retrofit'
 [[ ! -e $work/retrofit/tests/browser/home.spec.ts ]] || fail 'the update added the starter browser test to the retrofit'
-[[ -z $(git -C "$work/retrofit" status --porcelain --untracked-files=all -- packages tests) ]] ||
-  fail "the update changed the retrofit's packages/ or tests/"
+[[ -z $(git -C "$work/retrofit" status --porcelain --untracked-files=all -- packages tests \
+  ':!tests/playwright-version.test.ts') ]] || fail "the update changed the retrofit's packages/ or tests/"
 
 grep -qx '_commit: v100.0.1' "$work/docs/.copier-answers.yml" || fail "the docs retrofit's .copier-answers.yml does not record v100.0.1"
 grep -qx '# A template change' "$work/docs/.gitignore" || fail "the template change did not reach the docs retrofit's .gitignore"
@@ -140,4 +162,4 @@ for repository in retrofit docs single; do
   files=$(git -C "$work/$repository" status --porcelain --untracked-files=all | grep -v '^ M ' || true)
   [[ -z $files ]] || fail "the update added or deleted files in the $repository retrofit: $files"
 done
-echo 'copier update: from the last release with its CI and its Pages deployment kept, managed file updated, project edits kept, seeded files left alone, no starter or layout files in a retrofit'
+echo 'copier update: from the last release with its CI and its Pages deployment kept, managed file updated, project edits kept, seeded files left alone, the Playwright version test managed, no starter or layout files in a retrofit'

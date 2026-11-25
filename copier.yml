@@ -29,6 +29,9 @@ _skip_if_exists:
   - '/*/*/src/'
   - /tests/
   - '/*/*/tests/'
+  # Managed, unlike the rest of tests/: it fits any project, so the template's fixes reach it, and
+  # a project that deletes it keeps it deleted. A seeded file is rendered wherever it is missing.
+  - '!/tests/playwright-version.test.ts'
 
 # What the answers leave out. Paths starting with / are from the project root; `pkg` is the
 # prefix of the project's own package, empty or packages/<name>/.
@@ -81,8 +84,8 @@ _exclude:
   # starter: no, an existing repository brings its own code and configs, laid out its own way: no
   # seeded package.json, config, page or starter src/ and tests/, which assume the template's
   # layout. A seeded file is rendered wherever it is missing, so without these every `copier
-  # update` would add back the ones it has no place for. The seeded README.md, AGENTS.md and
-  # tests/playwright-version.test.ts fit any layout and are still rendered.
+  # update` would add back the ones it has no place for. The seeded README.md and AGENTS.md, and
+  # the managed tests/playwright-version.test.ts, fit any layout and are still rendered.
   - "{% if not starter %}package.json{% endif %}"
   - "{% if not starter %}vitest.config.ts{% endif %}"
   - "{% if not starter %}playwright.config.ts{% endif %}"
