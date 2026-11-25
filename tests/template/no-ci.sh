@@ -56,6 +56,8 @@ done
 [[ -f $work/browser/playwright.config.ts ]] || fail 'the browser tests are missing without CI'
 [[ ! -e $work/browser/tests/playwright-version.test.ts ]] ||
   fail 'a project without CI got tests/playwright-version.test.ts, which reads ci.yml'
+! grep -q '"yaml"' "$work/browser/package.json" ||
+  fail 'a project without CI got yaml, which only tests/playwright-version.test.ts uses'
 
 # refused <message> <copier --data>...: Copier must refuse the answers with the message
 refused() {

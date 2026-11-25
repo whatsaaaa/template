@@ -9,6 +9,8 @@
   'oxlint', 'typescript', 'vitest'] -%}
 {%- if framework == 'astro' %}{% set dev = dev + ['@astrojs/compiler-rs'] %}{% endif -%}
 {%- if browser_tests %}{% set dev = dev + ['@playwright/test'] %}{% endif -%}
+{#- tests/playwright-version.test.ts reads ci.yml #}
+{%- if browser_tests and (ci | default(true)) %}{% set dev = dev + ['yaml'] %}{% endif -%}
 {%- if design_system %}
   {%- set dev = dev + ['stylelint', 'stylelint-config-standard',
     'stylelint-value-no-unknown-custom-properties'] %}

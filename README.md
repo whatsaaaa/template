@@ -66,9 +66,10 @@ Vite or Astro config, no `index.html` and no starter `src/` and `tests/`. It has
 its layout needs them. A seeded file is skipped only where it exists, so otherwise every update
 would add back the ones it has no place for, such as `packages/<name>/package.json` for a
 workspace whose packages have other names. Only `README.md`, `AGENTS.md` and
-`tests/playwright-version.test.ts` are still seeded. A managed file it has no place for it deletes
-once: an update does not add back a managed file the project deleted. A library without a docs
-app can then still have browser tests of its own pages, such as playgrounds, with its own
+`tests/playwright-version.test.ts` are still seeded; that test reads `ci.yml` with `yaml`, which the
+repository's own `package.json` lists beside `@playwright/test`. A managed file it has no place for
+it deletes once: an update does not add back a managed file the project deleted. A library without
+a docs app can then still have browser tests of its own pages, such as playgrounds, with its own
 Playwright config.
 
 ## Update a project
@@ -158,6 +159,9 @@ actionlint cannot read a workflow called at `@v1`, so
 [`tests/template/check-callers.py`](tests/template/check-callers.py) checks each call against the
 workflows of the checkout: the inputs it passes, the permissions it grants, and the CI workflow the
 release starts on the Version Packages pull request.
+[`tests/template/playwright-version.sh`](tests/template/playwright-version.sh) checks the seeded
+`tests/playwright-version.test.ts` against the ways a project writes the version: quoted in
+`ci.yml`, only in a comment there, and a range in `package.json`.
 [`tests/template/update.sh`](tests/template/update.sh) checks `copier update` with the oldest Copier
 `copier.yml` allows and the current one, from the last release too, whose tag a clone needs
 (`git fetch --tags`), and [`tests/template/no-ci.sh`](tests/template/no-ci.sh)
