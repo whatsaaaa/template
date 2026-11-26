@@ -217,3 +217,5 @@ Copier records the version a project came from as `_commit` in `.copier-answers.
 lightweight, it records the floating `vX`, which names a different commit at each release: the next
 `copier update` then sees no change to carry, or refuses it as a downgrade. So release tags are
 always annotated, and `vX` stays lightweight.
+
+<!-- docs-only CI test, never merged -->
