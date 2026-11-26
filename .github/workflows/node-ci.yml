@@ -6,6 +6,15 @@
 #       uses: whatsaaaa/template/.github/workflows/node-ci.yml@v1
 #       with:
 #         playwright-version: 1.65.0
+#
+# Each change runs the browser tests once, on its pull request. The check job runs on every event,
+# and the browser job skips itself after a push to the default branch (the merged pull request
+# ran it), on the Version Packages branch changeset-release/* (version bumps and changelogs), and on
+# a pull request that changes only the files `docs-paths` names. Start the workflow by hand to run
+# the browser tests on main.
+#
+# A job its own `if:` skips reports as a skipped check, which a required check counts as passing, so
+# `ci / browser` reports on every pull request. A workflow `paths` filter would leave it pending.
 name: Node CI
 
 on:
@@ -31,6 +40,14 @@ on:
         description: The package.json script the browser job runs.
         type: string
         default: test:browser
+      docs-paths:
+        description: >-
+          The files no browser test reads, one glob per line from the repository root (git's glob
+          pathspecs: `*` stays within a directory, `**` crosses them). A pull request that changes
+          only these files skips the browser job. Leave out anything a tested page renders, such as
+          the Markdown of a docs site. Empty means the browser job runs on every pull request.
+        type: string
+        default: ''
       node-version:
         description: The Node.js version to set up.
         type: string
@@ -76,8 +93,56 @@ jobs:
             fi
           done
 
+  # Whether the pull request changes only the files `docs-paths` names
+  changes:
+    if: >-
+      inputs.playwright-version != '' && inputs.docs-paths != ''
+      && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docs-only: ${{ steps.diff.outputs.docs-only }}
+    steps:
+      # The pull request's merge commit and its first parent, the base branch it merges into. Trees
+      # only, for git diff.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: .github
+      - id: diff
+        env:
+          DOCS_PATHS: ${{ inputs.docs-paths }}
+        run: |
+          excludes=()
+          while IFS= read -r pattern; do
+            pattern="${pattern#"${pattern%%[![:space:]]*}"}"
+            pattern="${pattern%"${pattern##*[![:space:]]}"}"
+            if [ -n "$pattern" ]; then excludes+=(":(exclude,glob)$pattern"); fi
+          done <<<"$DOCS_PATHS"
+          # --no-renames lists both paths of a rename, and needs no file contents
+          changed=$(git diff --name-only --no-renames HEAD^1 HEAD)
+          others=$(git diff --name-only --no-renames HEAD^1 HEAD -- "${excludes[@]}")
+          if [ -n "$changed" ] && [ -z "$others" ]; then
+            echo "Only files docs-paths names changed, so the browser job skips:"
+            echo "$changed"
+            echo "docs-only=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "Files beyond docs-paths changed, so the browser job runs:"
+            echo "${others:-(no file changed)}"
+            echo "docs-only=false" >>"$GITHUB_OUTPUT"
+          fi
+
   browser:
-    if: inputs.playwright-version != ''
+    needs: changes
+    # !cancelled(): the browser job runs when `changes` was skipped, and when it failed, so a broken
+    # diff never passes the browser tests unrun.
+    if: >-
+      !cancelled() && inputs.playwright-version != ''
+      && !(github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch))
+      && !startsWith(github.head_ref || github.ref_name, 'changeset-release/')
+      && needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
     # The image's version must be the version of @playwright/test, so the browsers match.

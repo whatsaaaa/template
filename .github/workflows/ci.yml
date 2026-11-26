@@ -32,6 +32,8 @@ jobs:
     with:
       working-directory: tests/fixtures/node-project
       playwright-version: 1.65.0
+      # The fixture's browser test reads no Markdown
+      docs-paths: '**/*.md'
 
   # The setup action's inputs that node-ci.yml leaves at their defaults.
   setup:

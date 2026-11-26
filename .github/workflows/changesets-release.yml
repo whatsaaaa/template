@@ -25,7 +25,9 @@
 # GitHub starts no pull_request run for a pull request this workflow's token updates, so the
 # version job starts the caller's CI workflow on the Version Packages branch instead, for the
 # required checks. That workflow needs a `workflow_dispatch` trigger; pass its file name as
-# `ci-workflow` when it is not ci.yml.
+# `ci-workflow` when it is not ci.yml. On that branch node-ci.yml runs its check job only, and its
+# browser job reports as skipped: the pull request changes versions and changelogs, and every
+# change in it ran the browser tests on its own pull request.
 name: Changesets release
 
 on:

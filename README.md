@@ -98,7 +98,7 @@ breaking change to an input comes with a new major.
 
 | Workflow | What it runs | Inputs (default) |
 | --- | --- | --- |
-| [`node-ci.yml`](.github/workflows/node-ci.yml) | `check`: the package.json scripts in order, failing when `lint` auto-fixed a file. `browser`: the browser tests in the Playwright image, keeping the report of a failed run for 7 days | `scripts` (`format:check lint type-check test build`), `lint-fix-guard` (`true`), `timeout-minutes` (`15`), `playwright-version` (empty: no browser job), `browser-script` (`test:browser`), `node-version` (`24`), `working-directory` (`.`) |
+| [`node-ci.yml`](.github/workflows/node-ci.yml) | `check`: the package.json scripts in order, failing when `lint` auto-fixed a file. `browser`: the browser tests in the Playwright image, keeping the report of a failed run for 7 days. It skips itself after a push to the default branch, on the Version Packages branch, and on a pull request that changes only `docs-paths` | `scripts` (`format:check lint type-check test build`), `lint-fix-guard` (`true`), `timeout-minutes` (`15`), `playwright-version` (empty: no browser job), `browser-script` (`test:browser`), `docs-paths` (empty: the browser job runs on every pull request), `node-version` (`24`), `working-directory` (`.`) |
 | [`changesets-release.yml`](.github/workflows/changesets-release.yml) | changesets' Version Packages pull request, then pack and publish to npm by trusted publishing, in the `npm` environment. Starts the caller's CI on the Version Packages pull request, which needs `workflow_dispatch` | `ci-workflow` (`ci.yml`) |
 | [`pages.yml`](.github/workflows/pages.yml) | builds a site with a package.json script and deploys it to GitHub Pages | `build-script` (`build`), `artifact-path` (required), `fetch-depth` (`1`; `0` for VitePress `lastUpdated`), `node-version` (`24`), `working-directory` (`.`) |
 
@@ -113,7 +113,20 @@ jobs:
       playwright-version: 1.65.0 # the version of @playwright/test
 ```
 
-The checks of that job are named `ci / check` and `ci / browser`.
+The checks of that job are named `ci / check` and `ci / browser`, and `ci / changes` when
+`docs-paths` is set. A skipped `ci / browser` still reports, as skipped, which a required check
+counts as passing. Start the workflow by hand (`workflow_dispatch`) to run the browser tests on main.
+
+`docs-paths` takes one glob per line, from the repository root, in
+[git's glob pathspec](https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-glob)
+syntax: `*` stays within a directory and `**` crosses them. List only files no browser test reads:
+a docs site's Markdown is tested when a browser test opens its pages.
+
+```yaml
+      docs-paths: |
+        README.md
+        .changeset/*.md
+```
 
 npm's trusted publisher names the calling workflow, so a project's release workflow stays
 `.github/workflows/release.yml`.
